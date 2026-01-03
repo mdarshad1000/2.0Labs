@@ -2,6 +2,8 @@ import React from 'react';
 import { INITIAL_NODES, INITIAL_EDGES } from './constants';
 import Node from './Node';
 import Edge from './Edge';
+import LandingSidebar from './LandingSidebar';
+import LandingSearchBar from './LandingSearchBar';
 
 interface GraphAnimationProps {
     scrollProgress: number;
@@ -9,9 +11,9 @@ interface GraphAnimationProps {
 
 const GraphAnimation: React.FC<GraphAnimationProps> = ({ scrollProgress }) => {
     // Camera Shift Logic - simulate panning down as the graph expands
-    // Shift starts later in the sequence to follow the tree growth
-    const shiftStart = 0.28;
-    const shiftEnd = 0.38; // Complete the shift faster to make room for children
+    // Shift starts after the graph has grown a bit (around node 2 expansion)
+    const shiftStart = 0.65;
+    const shiftEnd = 0.85;
     let viewTranslateY = 0;
 
     if (scrollProgress >= shiftStart) {
@@ -25,6 +27,9 @@ const GraphAnimation: React.FC<GraphAnimationProps> = ({ scrollProgress }) => {
             className="absolute inset-0 graph-grid-bg bg-[#030a06]"
             style={{ zIndex: 0 }}
         >
+            <LandingSidebar scrollProgress={scrollProgress} />
+            <LandingSearchBar scrollProgress={scrollProgress} />
+
             <div className="relative w-full h-full overflow-hidden">
                 <div
                     className="absolute inset-0"
@@ -58,3 +63,4 @@ const GraphAnimation: React.FC<GraphAnimationProps> = ({ scrollProgress }) => {
 };
 
 export default GraphAnimation;
+

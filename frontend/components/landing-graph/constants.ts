@@ -15,7 +15,7 @@ export const INITIAL_NODES: Node[] = [
         type: 'root',
         position: { x: 50, y: 15 },
         color: 'slate',
-        visibleAt: 0.05, // Adjusted to appear earlier
+        visibleAt: 0.50, // Starts after intro morph
     },
     {
         id: 'node1',
@@ -28,7 +28,7 @@ export const INITIAL_NODES: Node[] = [
         type: 'child',
         position: { x: 22, y: 48 },
         color: 'amber',
-        visibleAt: 0.15,
+        visibleAt: 0.56,
     },
     {
         id: 'node2',
@@ -41,13 +41,13 @@ export const INITIAL_NODES: Node[] = [
         type: 'child',
         position: { x: 50, y: 52 },
         color: 'sky',
-        visibleAt: 0.25,
+        visibleAt: 0.64,
         expansion: {
-            triggerAt: 0.40,
-            loadingAt: 0.42,
-            optionsAt: 0.50,
-            brainstormAt: 0.60,
-            brainstormEndAt: 0.70,
+            triggerAt: 0.66,
+            loadingAt: 0.68,
+            optionsAt: 0.72,
+            brainstormAt: 0.77,
+            brainstormEndAt: 0.83,
             options: [
                 'Analyze investment strategy evolution from 2020 to 2022.',
                 'Evaluate impact of sustainable investments on 2021 financial metrics.',
@@ -66,7 +66,7 @@ export const INITIAL_NODES: Node[] = [
         type: 'child',
         position: { x: 78, y: 48 },
         color: 'amber',
-        visibleAt: 0.20,
+        visibleAt: 0.59,
     },
     {
         id: 'node4',
@@ -76,9 +76,9 @@ export const INITIAL_NODES: Node[] = [
             'Renewable energy segment outperformed traditional energy by 22%.'
         ],
         type: 'child',
-        position: { x: 35, y: 92 }, // Moved up from 110 to 92
+        position: { x: 35, y: 92 },
         color: 'emerald',
-        visibleAt: 0.81, // After e4 finishes (0.76 + 0.05)
+        visibleAt: 0.88,
     },
     {
         id: 'node5',
@@ -88,16 +88,16 @@ export const INITIAL_NODES: Node[] = [
             'Cost-to-income ratio improved by 450 basis points.'
         ],
         type: 'child',
-        position: { x: 65, y: 92 }, // Moved up from 110 to 92
+        position: { x: 65, y: 92 },
         color: 'emerald',
-        visibleAt: 0.89, // After e5 finishes (0.84 + 0.05)
+        visibleAt: 0.94,
     }
 ];
 
 export const INITIAL_EDGES: Edge[] = [
-    { id: 'e1', from: 'root', to: 'node1', visibleAt: 0.10 },
-    { id: 'e2', from: 'root', to: 'node2', visibleAt: 0.22 },
-    { id: 'e3', from: 'root', to: 'node3', visibleAt: 0.18 },
-    { id: 'e4', from: 'node2', to: 'node4', visibleAt: 0.76 },
-    { id: 'e5', from: 'node2', to: 'node5', visibleAt: 0.84 },
+    { id: 'e1', from: 'root', to: 'node1', visibleAt: 0.53 },
+    { id: 'e2', from: 'root', to: 'node2', visibleAt: 0.58 },
+    { id: 'e3', from: 'root', to: 'node3', visibleAt: 0.55 },
+    { id: 'e4', from: 'node2', to: 'node4', visibleAt: 0.84 },
+    { id: 'e5', from: 'node2', to: 'node5', visibleAt: 0.90 },
 ];

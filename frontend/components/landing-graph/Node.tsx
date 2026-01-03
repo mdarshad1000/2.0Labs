@@ -44,14 +44,14 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
 
     return (
         <div
-            className={`absolute w-72 select-none flex flex-col ${colorClass}`}
+            className={`absolute w-60 select-none flex flex-col ${colorClass}`}
             style={{
                 left: `${node.position.x}%`,
-                top: `${node.position.y}%`,
-                transform: `translate(-50%, 0) translateY(${translateY}%) scale(${showBrainstorm ? 1.1 : 1})`,
+                top: `${node.position.y + translateY}%`,
+                transform: `translate(-50%, 0) scale(${showBrainstorm ? 1.1 : 1})`,
                 opacity: opacity,
                 zIndex: expansionActive ? 20 : 10,
-                transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                transition: 'box-shadow 0.2s ease, transform 0.2s ease, top 0.05s linear',
             }}
         >
             {/* Connector Pins - Moved outside to specific overflow clipping */}
@@ -70,16 +70,16 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
             >
                 {/* Color Header Bar */}
                 <div
-                    className="h-1.5 shrink-0"
+                    className="h-1 shrink-0"
                     style={{ background: 'var(--node-header)' }}
                 />
 
                 {/* Content Area */}
-                <div className="p-5 flex flex-col h-full">
+                <div className="p-4 flex flex-col h-full">
                     {/* Title Row */}
-                    <div className="flex items-start justify-between mb-4 gap-3">
+                    <div className="flex items-start justify-between mb-3 gap-3">
                         <h3
-                            className="font-semibold text-[15px] leading-snug"
+                            className="font-semibold text-[13px] leading-snug"
                             style={{ color: 'var(--node-text)' }}
                         >
                             {node.title}
@@ -87,15 +87,15 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
                     </div>
 
                     {/* Content Points */}
-                    <ul className="space-y-2.5 mb-4">
+                    <ul className="space-y-2 mb-3">
                         {node.content.map((point, i) => (
-                            <li key={i} className="flex items-start gap-2.5">
+                            <li key={i} className="flex items-start gap-2">
                                 <div
                                     className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 opacity-60"
                                     style={{ background: 'var(--node-accent)' }}
                                 />
                                 <span
-                                    className="text-[12px] leading-relaxed font-light"
+                                    className="text-[11px] leading-relaxed font-light"
                                     style={{ color: 'var(--node-text)', opacity: 0.8 }}
                                 >
                                     {point}
@@ -125,10 +125,10 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
 
                 {/* Expansion Area */}
                 <div
-                    className={`border-t bg-black/20 overflow-hidden transition-all duration-700 ease-in-out ${expansionActive ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
+                    className={`border-t bg-black/20 overflow-hidden transition-all duration-700 ease-in-out ${expansionActive ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}
                     style={{ borderColor: 'var(--node-border)' }}
                 >
-                    <div className="p-4 space-y-3">
+                    <div className="p-3 space-y-2.5">
                         {/* Header Row */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -210,15 +210,15 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
                                     transition={{ duration: 0.5 }}
                                     className="mt-2 text-center"
                                 >
-                                    <div className="bg-[#050a08]/80 border border-white/5 rounded-xl p-5 flex flex-col items-center justify-center gap-3 shadow-inner">
-                                        <div className="loading-waveform">
+                                    <div className="bg-[#050a08]/80 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center gap-2.5 shadow-inner">
+                                        <div className="loading-waveform scale-90">
                                             <div className="waveform-bar"></div>
                                             <div className="waveform-bar"></div>
                                             <div className="waveform-bar"></div>
                                             <div className="waveform-bar"></div>
                                             <div className="waveform-bar"></div>
                                         </div>
-                                        <span className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-50" style={{ color: 'var(--node-text)' }}>
+                                        <span className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-50" style={{ color: 'var(--node-text)' }}>
                                             Brainstorming Node
                                         </span>
                                     </div>

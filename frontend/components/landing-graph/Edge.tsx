@@ -43,9 +43,14 @@ const Edge: React.FC<EdgeProps> = ({ edge, nodes, scrollProgress }) => {
         scrollProgress >= fromNode.expansion.triggerAt &&
         scrollProgress < fromNode.expansion.brainstormEndAt;
 
-    // Node 2 is taller (3 bullet points) -> ~32% height (midpoint adjustment)
-    // Root/Others are shorter -> ~20% height
-    const baseOffset = fromNode.id === 'node2' ? 32 : 20;
+    // Precise offsets matching miniature node heights and port locations
+    const getBaseOffset = () => {
+        if (fromNode.id === 'node2') return 35; // Blue node is tall
+        if (fromNode.id === 'node3') return 32; // Yellow node similarly tall
+        return 21; // Root and child nodes are shorter
+    };
+
+    const baseOffset = getBaseOffset();
     const sourceHeightOffset = isExpanded ? 50 : baseOffset;
 
     // From Bottom Center of Source to Top Center of Target
@@ -71,7 +76,7 @@ const Edge: React.FC<EdgeProps> = ({ edge, nodes, scrollProgress }) => {
                 <path
                     d={path}
                     stroke="rgba(16, 185, 129, 0.08)"
-                    strokeWidth="0.6"
+                    strokeWidth="0.5"
                     fill="none"
                     strokeLinecap="round"
                 />
@@ -79,7 +84,7 @@ const Edge: React.FC<EdgeProps> = ({ edge, nodes, scrollProgress }) => {
                 <path
                     d={path}
                     stroke="rgba(255, 255, 255, 0.15)"
-                    strokeWidth="0.3"
+                    strokeWidth="0.2"
                     fill="none"
                     strokeLinecap="round"
                 />
@@ -87,7 +92,7 @@ const Edge: React.FC<EdgeProps> = ({ edge, nodes, scrollProgress }) => {
                 <path
                     d={path}
                     stroke="rgba(16, 185, 129, 0.3)"
-                    strokeWidth="0.15"
+                    strokeWidth="0.1"
                     fill="none"
                     strokeLinecap="round"
                 />
@@ -95,7 +100,7 @@ const Edge: React.FC<EdgeProps> = ({ edge, nodes, scrollProgress }) => {
                 <path
                     d={path}
                     stroke="rgba(255, 255, 255, 0.6)"
-                    strokeWidth="0.12"
+                    strokeWidth="0.08"
                     fill="none"
                     strokeLinecap="round"
                     strokeDasharray="200"

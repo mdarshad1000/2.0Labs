@@ -92,9 +92,9 @@ const HeroLanding: React.FC<HeroLandingProps> = ({ onProceed, onLogin }) => {
   // 0.40 - 0.45: Transition
   // 0.45 - 1.00: Matrix Animation plays (remapped from original 0.08-1.0)
 
-  const MATRIX_START = 0.55;
+  const MATRIX_START = 0.82;
   const GRAPH_START = 0.08;
-  const GRAPH_END = 0.50;
+  const GRAPH_END = 0.82;
 
   // DERIVED PROGRESS VALUES
   // matrixProgress: 0 to 1 representing the progress WITHIN the matrix section
@@ -102,9 +102,9 @@ const HeroLanding: React.FC<HeroLandingProps> = ({ onProceed, onLogin }) => {
 
   // Calculate effective progress for logic checks (state-based)
   const matrixEffectiveProgress = Math.max(0, (scrollProgress - MATRIX_START) / (1 - MATRIX_START));
-  // Decoupled animation progress: Animation completes in 0.35, but section lasts until 0.55
-  // This creates a static "viewing" window after the animation finishes.
-  const graphEffectiveProgress = Math.min(1, Math.max(0, (scrollProgress - GRAPH_START) / 0.35));
+  // Decoupled animation progress: Animation + Intro + Graph
+  // Animation completes by scroll 0.72 (0.08 + 0.64 * 1.0)
+  const graphEffectiveProgress = Math.min(1, Math.max(0, (scrollProgress - GRAPH_START) / 0.64));
 
   // --- 1. HERO TEXT SECTION ---
   // Fades up and shrinks early on
@@ -117,8 +117,9 @@ const HeroLanding: React.FC<HeroLandingProps> = ({ onProceed, onLogin }) => {
 
   // --- 2. GRAPH ANIMATION SECTION ---
   // Appears after/as text fades, fades out before Matrix
-  const graphOpacity = useTransform(scrollYProgress, [GRAPH_START, GRAPH_START + 0.05, GRAPH_END - 0.05, GRAPH_END], [0, 1, 1, 0]);
-  const graphScale = useTransform(scrollYProgress, [GRAPH_START, GRAPH_END], [0.95, 1.05]); // Slight zoom
+  // Static window from 0.72 to 0.77
+  const graphOpacity = useTransform(scrollYProgress, [GRAPH_START, GRAPH_START + 0.05, 0.77, GRAPH_END], [0, 1, 1, 0]);
+  const graphScale = useTransform(scrollYProgress, [GRAPH_START, GRAPH_END], [0.85, 0.95]); // Miniature zoom
   const graphVisible = scrollProgress > GRAPH_START - 0.02 && scrollProgress < GRAPH_END + 0.02;
 
   // --- 3. MATRIX ANIMATION SECTION ---
@@ -214,7 +215,7 @@ const HeroLanding: React.FC<HeroLandingProps> = ({ onProceed, onLogin }) => {
     <div
       ref={containerRef}
       className="relative bg-[#030a06]"
-      style={{ height: '1600vh' }} // Extended height for multi-stage animation
+      style={{ height: '2000vh' }} // Extended height for multi-stage animation
     >
       {/* Grain overlay */}
       <div className="landing-grain" aria-hidden="true" />
