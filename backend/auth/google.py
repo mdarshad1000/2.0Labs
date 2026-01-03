@@ -1,0 +1,114 @@
+"""
+Google OAuth2 client for authentication.
+"""
+from typing import Dict, Optional
+
+import requests
+
+from core.config import settings
+from core.logfire_config import log_error, log_info, log_warning
+from models.auth import OAuthUserInfo
+
+
+class GoogleAuthClient:
+    """Google OAuth2 client."""
+
+    def __init__(self):
+        self.client_id = settings.google_oauth.client_id
+        secret = settings.google_oauth.client_secret
+        self.client_secret = secret.get_secret_value() if secret else None
+        self.redirect_uri = settings.google_oauth.redirect_uri
+        self.auth_base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+        self.token_url = "https://oauth2.googleapis.com/token"
+        self.user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+    def get_auth_url(self, state: str = "") -> str:
+        """
+        Generate the authorization URL for Google OAuth.
+
+        Args:
+            state: Optional state parameter for security
+
+        Returns:
+            str: The authorization URL
+        """
+        params = {
+            "client_id": self.client_id,
+            "redirect_uri": self.redirect_uri,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "access_type": "offline",
+            "prompt": "consent",
+        }
+
+        if state:
+            params["state"] = state
+
+        # Build the URL with parameters
+        auth_url = (
+            f"{self.auth_base_url}?{'&'.join(f'{k}={v}' for k, v in params.items())}"
+        )
+        return auth_url
+
+    def get_token(self, code: str) -> Optional[Dict]:
+        """
+        Exchange the authorization code for tokens.
+
+        Args:
+            code: The authorization code from the callback
+
+        Returns:
+            Optional[Dict]: The token response containing access_token, refresh_token, etc.
+        """
+        payload = {
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "code": code,
+            "redirect_uri": self.redirect_uri,
+            "grant_type": "authorization_code",
+        }
+
+        try:
+            response = requests.post(self.token_url, data=payload)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            log_error("Error getting token from Google", error=e)
+            return None
+
+    def get_user_info(self, access_token: str) -> Optional[OAuthUserInfo]:
+        """
+        Get user information using the access token.
+
+        Args:
+            access_token: The OAuth access token
+
+        Returns:
+            Optional[OAuthUserInfo]: The user information
+        """
+        headers = {"Authorization": f"Bearer {access_token}"}
+
+        try:
+            response = requests.get(self.user_info_url, headers=headers)
+            response.raise_for_status()
+            user_data = response.json()
+
+            # Convert to our schema
+            return OAuthUserInfo(
+                id=user_data["id"],
+                email=user_data["email"],
+                name=user_data.get("name"),
+                picture=user_data.get("picture"),
+                locale=user_data.get("locale"),
+            )
+        except requests.exceptions.RequestException as e:
+            log_error("Error getting user info from Google", error=e)
+            return None
+        except KeyError as e:
+            log_error("Missing field in Google user info response", error=e)
+            return None
+
+
+# Create a singleton instance
+google_auth_client = GoogleAuthClient()
+

@@ -1,0 +1,10 @@
+2.0Labs - Verification Code
+
+Your verification code is: {{verification_code}}
+
+Enter this code to sign in to your 2.0Labs account.
+
+This code will expire in 10 minutes.
+
+If you didn't request this code, you can safely ignore this email.
+
