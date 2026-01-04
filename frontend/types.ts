@@ -48,7 +48,7 @@ export interface ActivityLog {
 export interface GraphNode {
   id: string;
   title: string;
-  content: string[];
+  content: string;
   color: 'yellow' | 'red' | 'blue' | 'green' | 'slate' | 'orange';
   position: { x: number; y: number };
   width?: number;
@@ -56,6 +56,8 @@ export interface GraphNode {
   parentId?: string;
   query?: string;
   connectedTo: string[];
+  isLoading?: boolean;
+  isQueryNode?: boolean;
   pendingMerge?: {
     sourceNodeId: string;
     targetNodeId: string;

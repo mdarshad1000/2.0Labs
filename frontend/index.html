@@ -1,1022 +1,1275 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>2.0Labs | Thinking Instrument</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100;200;300;400;500;600&family=JetBrains+Mono:wght@100;200;300;400&display=swap" rel="stylesheet">
-    <style>
-      :root {
-        --bg-color: #030a06;
-        --accent-emerald: #10b981;
-        --glass-border: rgba(16, 185, 129, 0.15);
-        /* Supabase-inspired compact sizing */
-        --text-xs: 10px;
-        --text-sm: 11px;
-        --text-base: 12px;
-        --text-md: 13px;
-        --text-lg: 14px;
-        --spacing-xs: 4px;
-        --spacing-sm: 6px;
-        --spacing-md: 8px;
-        --spacing-lg: 12px;
-        --spacing-xl: 16px;
-      }
-      body {
-        font-family: 'Epilogue', sans-serif;
-        background: var(--bg-color);
-        color: #f8fafc;
-        overflow: hidden;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        font-size: var(--text-base);
-        line-height: 1.5;
-      }
-      .font-mono {
-        font-family: 'JetBrains Mono', monospace;
-      }
-      /* Compact glass surface */
-      .glass-surface {
-        background: rgba(8, 20, 14, 0.92);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border: 1px solid var(--glass-border);
-      }
-      /* Compact text utilities */
-      .text-compact-xs { font-size: var(--text-xs); }
-      .text-compact-sm { font-size: var(--text-sm); }
-      .text-compact-base { font-size: var(--text-base); }
-      .text-compact-md { font-size: var(--text-md); }
-      .text-compact-lg { font-size: var(--text-lg); }
-      .matrix-cell-loading {
-        position: relative;
-        overflow: hidden;
-      }
-      .matrix-cell-loading::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.04), transparent);
-        transform: translateX(-100%);
-        animation: shimmer 3s infinite ease-in-out;
-      }
-      @keyframes shimmer {
-        100% { transform: translateX(100%); }
-      }
 
-      /* ═══════════════════════════════════════════════════════════════
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2.0Labs | Thinking Instrument</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Epilogue:wght@100;200;300;400;500;600&family=JetBrains+Mono:wght@100;200;300;400&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0c0f13;
+      --accent-emerald: #10b981;
+      --glass-border: rgba(37, 42, 49, 0.6);
+      /* Supabase-inspired compact sizing */
+      --text-xs: 10px;
+      --text-sm: 11px;
+      --text-base: 12px;
+      --text-md: 13px;
+      --text-lg: 14px;
+      --spacing-xs: 4px;
+      --spacing-sm: 6px;
+      --spacing-md: 8px;
+      --spacing-lg: 12px;
+      --spacing-xl: 16px;
+    }
+
+    body {
+      font-family: 'Epilogue', sans-serif;
+      background: var(--bg-color);
+      color: #b9c0cc;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-size: var(--text-base);
+      line-height: 1.5;
+    }
+
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Compact glass surface */
+    .glass-surface {
+      background: rgba(12, 15, 19, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+    }
+
+    /* Compact text utilities */
+    .text-compact-xs {
+      font-size: var(--text-xs);
+    }
+
+    .text-compact-sm {
+      font-size: var(--text-sm);
+    }
+
+    .text-compact-base {
+      font-size: var(--text-base);
+    }
+
+    .text-compact-md {
+      font-size: var(--text-md);
+    }
+
+    .text-compact-lg {
+      font-size: var(--text-lg);
+    }
+
+    .matrix-cell-loading {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .matrix-cell-loading::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.04), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 3s infinite ease-in-out;
+    }
+
+    @keyframes shimmer {
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
          SIGNAL ASSEMBLY — Cell Loading Animation
          ═══════════════════════════════════════════════════════════════ */
-      
-      .signal-assembly {
-        position: relative;
-        width: 24px;
-        height: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
 
-      .signal-segment {
-        position: absolute;
-        width: 4px;
-        height: 1.5px;
-        background: #10b981;
-        border-radius: 1px;
+    .signal-assembly {
+      position: relative;
+      width: 24px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .signal-segment {
+      position: absolute;
+      width: 4px;
+      height: 1.5px;
+      background: #10b981;
+      border-radius: 1px;
+      opacity: 0;
+      box-shadow: 0 0 4px rgba(16, 185, 129, 0.5);
+    }
+
+    /* Each segment starts from a different position and drifts inward */
+    .signal-segment:nth-child(1) {
+      animation: signalDrift1 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+    }
+
+    .signal-segment:nth-child(2) {
+      animation: signalDrift2 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) 0.15s infinite;
+    }
+
+    .signal-segment:nth-child(3) {
+      animation: signalDrift3 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s infinite;
+    }
+
+    .signal-segment:nth-child(4) {
+      animation: signalDrift4 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) 0.45s infinite;
+    }
+
+    @keyframes signalDrift1 {
+      0% {
         opacity: 0;
-        box-shadow: 0 0 4px rgba(16, 185, 129, 0.5);
+        transform: translate(-12px, -4px) rotate(-20deg);
       }
 
-      /* Each segment starts from a different position and drifts inward */
-      .signal-segment:nth-child(1) {
-        animation: signalDrift1 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
-      }
-      .signal-segment:nth-child(2) {
-        animation: signalDrift2 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) 0.15s infinite;
-      }
-      .signal-segment:nth-child(3) {
-        animation: signalDrift3 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) 0.3s infinite;
-      }
-      .signal-segment:nth-child(4) {
-        animation: signalDrift4 2.4s cubic-bezier(0.25, 0.1, 0.25, 1) 0.45s infinite;
+      25% {
+        opacity: 0.8;
+        transform: translate(-3px, -1px) rotate(-10deg);
       }
 
-      @keyframes signalDrift1 {
-        0% { 
-          opacity: 0; 
-          transform: translate(-12px, -4px) rotate(-20deg); 
-        }
-        25% { 
-          opacity: 0.8; 
-          transform: translate(-3px, -1px) rotate(-10deg); 
-        }
-        40% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        55% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        70% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        100% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
+      40% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
       }
 
-      @keyframes signalDrift2 {
-        0% { 
-          opacity: 0; 
-          transform: translate(14px, -3px) rotate(25deg); 
-        }
-        25% { 
-          opacity: 0.8; 
-          transform: translate(4px, -1px) rotate(12deg); 
-        }
-        40% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        55% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        70% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        100% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
+      55% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
       }
 
-      @keyframes signalDrift3 {
-        0% { 
-          opacity: 0; 
-          transform: translate(-10px, 5px) rotate(15deg); 
-        }
-        25% { 
-          opacity: 0.8; 
-          transform: translate(-2px, 1px) rotate(5deg); 
-        }
-        40% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        55% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        70% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        100% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
+      70% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
       }
 
-      @keyframes signalDrift4 {
-        0% { 
-          opacity: 0; 
-          transform: translate(11px, 4px) rotate(-18deg); 
-        }
-        25% { 
-          opacity: 0.8; 
-          transform: translate(3px, 1px) rotate(-8deg); 
-        }
-        40% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        55% { 
-          opacity: 1; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        70% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
-        100% { 
-          opacity: 0; 
-          transform: translate(0, 0) rotate(0deg); 
-        }
+      100% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
       }
-      .ticker-glow {
-        box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
-      }
-      ::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
-      }
-      ::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.1);
-      }
-      ::-webkit-scrollbar-thumb {
-        background: rgba(16, 185, 129, 0.3);
-        border-radius: 2px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(16, 185, 129, 0.5);
-      }
-      .animate-float-up {
-        animation: floatUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      }
-      @keyframes floatUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .cell-highlight-pulse {
-        animation: cellHighlight 0.8s ease-in-out infinite alternate;
-      }
-      @keyframes cellHighlight {
-        0% { 
-          box-shadow: 0 0 15px rgba(52, 211, 153, 0.3), inset 0 0 15px rgba(52, 211, 153, 0.08);
-          background-color: rgba(16, 185, 129, 0.15);
-        }
-        100% { 
-          box-shadow: 0 0 25px rgba(52, 211, 153, 0.5), inset 0 0 25px rgba(52, 211, 153, 0.15);
-          background-color: rgba(16, 185, 129, 0.25);
-        }
+    }
+
+    @keyframes signalDrift2 {
+      0% {
+        opacity: 0;
+        transform: translate(14px, -3px) rotate(25deg);
       }
 
-      /* Analytical Glyph Fade-in */
-      .animate-fade-in {
-        animation: fadeIn 300ms ease-out forwards;
-      }
-      @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+      25% {
+        opacity: 0.8;
+        transform: translate(4px, -1px) rotate(12deg);
       }
 
-      /* ═══════════════════════════════════════════════════════════════
+      40% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      55% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      70% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
+      }
+    }
+
+    @keyframes signalDrift3 {
+      0% {
+        opacity: 0;
+        transform: translate(-10px, 5px) rotate(15deg);
+      }
+
+      25% {
+        opacity: 0.8;
+        transform: translate(-2px, 1px) rotate(5deg);
+      }
+
+      40% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      55% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      70% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
+      }
+    }
+
+    @keyframes signalDrift4 {
+      0% {
+        opacity: 0;
+        transform: translate(11px, 4px) rotate(-18deg);
+      }
+
+      25% {
+        opacity: 0.8;
+        transform: translate(3px, 1px) rotate(-8deg);
+      }
+
+      40% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      55% {
+        opacity: 1;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      70% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(0, 0) rotate(0deg);
+      }
+    }
+
+    .ticker-glow {
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(16, 185, 129, 0.3);
+      border-radius: 2px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.5);
+    }
+
+    .animate-float-up {
+      animation: floatUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes floatUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .cell-highlight-pulse {
+      animation: cellHighlight 0.8s ease-in-out infinite alternate;
+    }
+
+    @keyframes cellHighlight {
+      0% {
+        box-shadow: 0 0 15px rgba(52, 211, 153, 0.3), inset 0 0 15px rgba(52, 211, 153, 0.08);
+        background-color: rgba(16, 185, 129, 0.15);
+      }
+
+      100% {
+        box-shadow: 0 0 25px rgba(52, 211, 153, 0.5), inset 0 0 25px rgba(52, 211, 153, 0.15);
+        background-color: rgba(16, 185, 129, 0.25);
+      }
+    }
+
+    /* Analytical Glyph Fade-in */
+    .animate-fade-in {
+      animation: fadeIn 300ms ease-out forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
          INLINE CELL EXPANSION — Elastic Matrix Aesthetic
          ═══════════════════════════════════════════════════════════════ */
-      
-      /* Focus strip: dim other rows when one is expanded */
-      .matrix-has-expansion tr.matrix-data-row:not(.matrix-row-expanded) {
-        opacity: 0.4;
-        transition: opacity 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
-      }
-      .matrix-has-expansion tr.matrix-data-row:not(.matrix-row-expanded):hover {
-        opacity: 0.7;
-      }
-      .matrix-has-expansion tr.matrix-row-expanded {
-        opacity: 1;
-      }
-      
-      .expansion-row {
-        animation: expandRow 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-      
-      @keyframes expandRow {
-        0% {
-          opacity: 0;
-          transform: scaleY(0.8);
-          transform-origin: top;
-        }
-        60% {
-          opacity: 1;
-          transform: scaleY(1.02);
-        }
-        100% {
-          opacity: 1;
-          transform: scaleY(1);
-        }
-      }
 
-      /* Expansion content wrapper with fixed max height */
-      .expansion-content-wrapper {
-        max-height: 280px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        position: relative;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(16, 185, 129, 0.3) transparent;
-      }
-      
-      .expansion-content-wrapper::-webkit-scrollbar {
-        width: 4px;
-      }
-      .expansion-content-wrapper::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      .expansion-content-wrapper::-webkit-scrollbar-thumb {
-        background: rgba(16, 185, 129, 0.3);
-        border-radius: 4px;
-      }
-      .expansion-content-wrapper::-webkit-scrollbar-thumb:hover {
-        background: rgba(16, 185, 129, 0.5);
-      }
+    /* Focus strip: dim other rows when one is expanded */
+    .matrix-has-expansion tr.matrix-data-row:not(.matrix-row-expanded) {
+      opacity: 0.4;
+      transition: opacity 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
 
-      /* Fade overlay at bottom when content overflows */
-      .expansion-fade-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 40px;
-        background: linear-gradient(to top, rgba(8, 20, 14, 0.95), transparent);
-        pointer-events: none;
+    .matrix-has-expansion tr.matrix-data-row:not(.matrix-row-expanded):hover {
+      opacity: 0.7;
+    }
+
+    .matrix-has-expansion tr.matrix-row-expanded {
+      opacity: 1;
+    }
+
+    .expansion-row {
+      animation: expandRow 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes expandRow {
+      0% {
         opacity: 0;
-        transition: opacity 200ms ease;
+        transform: scaleY(0.8);
+        transform-origin: top;
       }
-      .expansion-fade-overlay.show {
+
+      60% {
+        opacity: 1;
+        transform: scaleY(1.02);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scaleY(1);
+      }
+    }
+
+    /* Expansion content wrapper with fixed max height */
+    .expansion-content-wrapper {
+      max-height: 280px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(16, 185, 129, 0.3) transparent;
+    }
+
+    .expansion-content-wrapper::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .expansion-content-wrapper::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .expansion-content-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(16, 185, 129, 0.3);
+      border-radius: 4px;
+    }
+
+    .expansion-content-wrapper::-webkit-scrollbar-thumb:hover {
+      background: rgba(16, 185, 129, 0.5);
+    }
+
+    /* Fade overlay at bottom when content overflows */
+    .expansion-fade-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 40px;
+      background: linear-gradient(to top, rgba(8, 20, 14, 0.95), transparent);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    .expansion-fade-overlay.show {
+      opacity: 1;
+    }
+
+    .expansion-row td>div {
+      animation: expandContent 400ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    @keyframes expandContent {
+      0% {
+        opacity: 0;
+      }
+
+      100% {
         opacity: 1;
       }
+    }
 
-      .expansion-row td > div {
-        animation: expandContent 400ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-      }
-      
-      @keyframes expandContent {
-        0% {
-          opacity: 0;
-        }
-        100% {
-          opacity: 1;
-        }
-      }
+    /* Smooth transition for reasoning expand/collapse */
+    .transition-all.duration-250 {
+      transition-duration: 250ms;
+    }
 
-      /* Smooth transition for reasoning expand/collapse */
-      .transition-all.duration-250 {
-        transition-duration: 250ms;
-      }
-      
-      .transition-all.duration-350 {
-        transition-duration: 350ms;
-      }
+    .transition-all.duration-350 {
+      transition-duration: 350ms;
+    }
 
-      /* ═══════════════════════════════════════════════════════════════
+    /* ═══════════════════════════════════════════════════════════════
          LANDING PAGE MOTION SYSTEM — Thinking Instrument Aesthetic
          ═══════════════════════════════════════════════════════════════ */
-      
-      /* Custom easing: slow, deliberate, non-linear */
-      :root {
-        --ease-resolve: cubic-bezier(0.25, 0.1, 0.25, 1);
-        --ease-drift: cubic-bezier(0.45, 0.05, 0.55, 0.95);
-      }
 
-      /* ─── PAGE LOAD: Background & Grain Resolution ─── */
-      .landing-container {
+    /* Custom easing: slow, deliberate, non-linear */
+    :root {
+      --ease-resolve: cubic-bezier(0.25, 0.1, 0.25, 1);
+      --ease-drift: cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    }
+
+    /* ─── PAGE LOAD: Background & Grain Resolution ─── */
+    .landing-container {
+      opacity: 0;
+      animation: resolveContainer 0.6s var(--ease-resolve) 0.1s forwards;
+    }
+
+    @keyframes resolveContainer {
+      0% {
         opacity: 0;
-        animation: resolveContainer 0.6s var(--ease-resolve) 0.1s forwards;
-      }
-      
-      @keyframes resolveContainer {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
       }
 
-      /* Grain overlay - independent motion */
-      .landing-grain {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* Grain overlay - independent motion */
+    .landing-grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 128px 128px;
+      mix-blend-mode: overlay;
+      animation: resolveGrain 0.8s var(--ease-resolve) 0.1s forwards,
+        driftGrain 25s var(--ease-drift) infinite;
+    }
+
+    @keyframes resolveGrain {
+      0% {
         opacity: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-        background-size: 128px 128px;
-        mix-blend-mode: overlay;
-        animation: resolveGrain 0.8s var(--ease-resolve) 0.1s forwards,
-                   driftGrain 25s var(--ease-drift) infinite;
-      }
-      
-      @keyframes resolveGrain {
-        0% { opacity: 0; }
-        100% { opacity: 0.025; }
-      }
-      
-      @keyframes driftGrain {
-        0%, 100% { transform: translate(0, 0); }
-        25% { transform: translate(2px, 1px); }
-        50% { transform: translate(-1px, 2px); }
-        75% { transform: translate(1px, -1px); }
       }
 
-      /* ─── LOGO & TITLE: Blur Resolution ─── */
-      .landing-logo {
+      100% {
+        opacity: 0.025;
+      }
+    }
+
+    @keyframes driftGrain {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      25% {
+        transform: translate(2px, 1px);
+      }
+
+      50% {
+        transform: translate(-1px, 2px);
+      }
+
+      75% {
+        transform: translate(1px, -1px);
+      }
+    }
+
+    /* ─── LOGO & TITLE: Blur Resolution ─── */
+    .landing-logo {
+      opacity: 0;
+      filter: blur(8px);
+      animation: resolveLogo 0.5s var(--ease-resolve) 0.15s forwards;
+    }
+
+    @keyframes resolveLogo {
+      0% {
         opacity: 0;
         filter: blur(8px);
-        animation: resolveLogo 0.5s var(--ease-resolve) 0.15s forwards;
-      }
-      
-      @keyframes resolveLogo {
-        0% { opacity: 0; filter: blur(8px); }
-        60% { opacity: 0.7; filter: blur(2px); }
-        100% { opacity: 1; filter: blur(0); }
       }
 
-      .landing-title {
+      60% {
+        opacity: 0.7;
+        filter: blur(2px);
+      }
+
+      100% {
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    .landing-title {
+      opacity: 0;
+      filter: blur(4px);
+      animation: resolveTitle 0.5s var(--ease-resolve) 0.2s forwards;
+    }
+
+    @keyframes resolveTitle {
+      0% {
         opacity: 0;
         filter: blur(4px);
-        animation: resolveTitle 0.5s var(--ease-resolve) 0.2s forwards;
-      }
-      
-      @keyframes resolveTitle {
-        0% { opacity: 0; filter: blur(4px); }
-        50% { opacity: 0.5; filter: blur(1px); }
-        100% { opacity: 1; filter: blur(0); }
       }
 
-      .landing-subtitle {
+      50% {
+        opacity: 0.5;
+        filter: blur(1px);
+      }
+
+      100% {
+        opacity: 1;
+        filter: blur(0);
+      }
+    }
+
+    .landing-subtitle {
+      opacity: 0;
+      animation: resolveSubtitle 0.5s var(--ease-resolve) 0.25s forwards;
+    }
+
+    @keyframes resolveSubtitle {
+      0% {
         opacity: 0;
-        animation: resolveSubtitle 0.5s var(--ease-resolve) 0.25s forwards;
-      }
-      
-      @keyframes resolveSubtitle {
-        0% { opacity: 0; }
-        100% { opacity: 0.4; }
       }
 
-      .landing-hint {
+      100% {
+        opacity: 0.4;
+      }
+    }
+
+    .landing-hint {
+      opacity: 0;
+      animation: resolveHint 0.5s var(--ease-resolve) 0.3s forwards;
+    }
+
+    @keyframes resolveHint {
+      0% {
         opacity: 0;
-        animation: resolveHint 0.5s var(--ease-resolve) 0.3s forwards;
-      }
-      
-      @keyframes resolveHint {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
       }
 
-      /* ─── CARDS: Progressive Resolution ─── */
-      .landing-card {
-        --card-delay: 0ms;
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* ─── CARDS: Progressive Resolution ─── */
+    .landing-card {
+      --card-delay: 0ms;
+      opacity: 1;
+      border-color: rgba(16, 185, 129, 0.15);
+      animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both;
+      transition: border-color 0.4s var(--ease-resolve),
+        background-color 0.4s var(--ease-resolve),
+        box-shadow 0.4s var(--ease-resolve),
+        transform 0.4s var(--ease-resolve);
+    }
+
+    @keyframes resolveCard {
+      0% {
+        opacity: 0;
+        border-color: rgba(16, 185, 129, 0);
+      }
+
+      40% {
+        opacity: 0.6;
+        border-color: rgba(16, 185, 129, 0.04);
+      }
+
+      100% {
         opacity: 1;
         border-color: rgba(16, 185, 129, 0.15);
-        animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both;
-        transition: border-color 0.4s var(--ease-resolve),
-                    background-color 0.4s var(--ease-resolve),
-                    box-shadow 0.4s var(--ease-resolve),
-                    transform 0.4s var(--ease-resolve);
       }
-      
-      @keyframes resolveCard {
-        0% { 
-          opacity: 0;
-          border-color: rgba(16, 185, 129, 0);
-        }
-        40% { 
-          opacity: 0.6;
-          border-color: rgba(16, 185, 129, 0.04);
-        }
-        100% { 
-          opacity: 1;
-          border-color: rgba(16, 185, 129, 0.15);
-        }
-      }
+    }
 
-      .landing-card-icon {
+    .landing-card-icon {
+      opacity: 0;
+      animation: resolveIcon 0.4s var(--ease-resolve) calc(0.45s + var(--card-delay)) forwards;
+    }
+
+    @keyframes resolveIcon {
+      0% {
         opacity: 0;
-        animation: resolveIcon 0.4s var(--ease-resolve) calc(0.45s + var(--card-delay)) forwards;
-      }
-      
-      @keyframes resolveIcon {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
       }
 
-      .landing-card-title {
-        opacity: 0;
-        animation: resolveCardText 0.4s var(--ease-resolve) calc(0.4s + var(--card-delay)) forwards;
-      }
-      
-      @keyframes resolveCardText {
-        0% { opacity: 0; }
-        100% { opacity: 1; }
-      }
-
-      .landing-card-desc {
-        opacity: 0;
-        animation: resolveCardDesc 0.4s var(--ease-resolve) calc(0.45s + var(--card-delay)) forwards;
-      }
-      
-      @keyframes resolveCardDesc {
-        0% { opacity: 0; }
-        100% { opacity: 0.6; }
-      }
-
-      .landing-card-action {
-        opacity: 0;
-        animation: resolveAction 0.4s var(--ease-resolve) calc(0.5s + var(--card-delay)) forwards;
-      }
-      
-      @keyframes resolveAction {
-        0% { opacity: 0; }
-        100% { opacity: 0.5; }
-      }
-
-      /* ─── HOVER: Focus Enhancement (No Movement) ─── */
-      .landing-card:hover {
-        border-color: rgba(16, 185, 129, 0.30);
-        background-color: rgba(10, 24, 16, 0.95);
-        box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.08),
-                    inset 0 0 30px rgba(16, 185, 129, 0.02);
-        transform: translateY(-2px);
-      }
-
-      .landing-card:hover .landing-card-icon {
-        background-color: rgba(16, 185, 129, 0.08);
-        border-color: rgba(16, 185, 129, 0.2);
-      }
-
-      .landing-card:hover .landing-card-action {
+      100% {
         opacity: 1;
       }
+    }
 
-      /* ─── IDLE STATE: Independent Micro-Drift ─── */
-      .landing-card.idle-drift-1 {
-        animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
-                   idleDrift1 12s var(--ease-drift) 1.5s infinite;
-      }
-      .landing-card.idle-drift-2 {
-        animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
-                   idleDrift2 14s var(--ease-drift) 1.6s infinite;
-      }
-      .landing-card.idle-drift-3 {
-        animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
-                   idleDrift3 11s var(--ease-drift) 1.7s infinite;
-      }
-      .landing-card.idle-drift-4 {
-        animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
-                   idleDrift4 13s var(--ease-drift) 1.5s infinite;
+    .landing-card-title {
+      opacity: 0;
+      animation: resolveCardText 0.4s var(--ease-resolve) calc(0.4s + var(--card-delay)) forwards;
+    }
+
+    @keyframes resolveCardText {
+      0% {
+        opacity: 0;
       }
 
-      @keyframes idleDrift1 {
-        0%, 100% { transform: translate(0, 0); }
-        33% { transform: translate(0.5px, -0.3px); }
-        66% { transform: translate(-0.3px, 0.5px); }
+      100% {
+        opacity: 1;
       }
-      @keyframes idleDrift2 {
-        0%, 100% { transform: translate(0, 0); }
-        25% { transform: translate(-0.4px, 0.4px); }
-        75% { transform: translate(0.4px, -0.2px); }
-      }
-      @keyframes idleDrift3 {
-        0%, 100% { transform: translate(0, 0); }
-        40% { transform: translate(0.3px, 0.5px); }
-        80% { transform: translate(-0.5px, -0.3px); }
-      }
-      @keyframes idleDrift4 {
-        0%, 100% { transform: translate(0, 0); }
-        20% { transform: translate(-0.2px, -0.4px); }
-        60% { transform: translate(0.5px, 0.2px); }
+    }
+
+    .landing-card-desc {
+      opacity: 0;
+      animation: resolveCardDesc 0.4s var(--ease-resolve) calc(0.45s + var(--card-delay)) forwards;
+    }
+
+    @keyframes resolveCardDesc {
+      0% {
+        opacity: 0;
       }
 
-      /* Hover pauses only the idle drift, not the resolve animation */
-      .landing-card:hover {
-        animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both;
+      100% {
+        opacity: 0.6;
+      }
+    }
+
+    .landing-card-action {
+      opacity: 0;
+      animation: resolveAction 0.4s var(--ease-resolve) calc(0.5s + var(--card-delay)) forwards;
+    }
+
+    @keyframes resolveAction {
+      0% {
+        opacity: 0;
       }
 
-      /* ═══════════════════════════════════════════════════════════════
+      100% {
+        opacity: 0.5;
+      }
+    }
+
+    /* ─── HOVER: Focus Enhancement (No Movement) ─── */
+    .landing-card:hover {
+      border-color: rgba(16, 185, 129, 0.30);
+      background-color: rgba(10, 24, 16, 0.95);
+      box-shadow: 0 0 40px -10px rgba(16, 185, 129, 0.08),
+        inset 0 0 30px rgba(16, 185, 129, 0.02);
+      transform: translateY(-2px);
+    }
+
+    .landing-card:hover .landing-card-icon {
+      background-color: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .landing-card:hover .landing-card-action {
+      opacity: 1;
+    }
+
+    /* ─── IDLE STATE: Independent Micro-Drift ─── */
+    .landing-card.idle-drift-1 {
+      animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
+        idleDrift1 12s var(--ease-drift) 1.5s infinite;
+    }
+
+    .landing-card.idle-drift-2 {
+      animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
+        idleDrift2 14s var(--ease-drift) 1.6s infinite;
+    }
+
+    .landing-card.idle-drift-3 {
+      animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
+        idleDrift3 11s var(--ease-drift) 1.7s infinite;
+    }
+
+    .landing-card.idle-drift-4 {
+      animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both,
+        idleDrift4 13s var(--ease-drift) 1.5s infinite;
+    }
+
+    @keyframes idleDrift1 {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      33% {
+        transform: translate(0.5px, -0.3px);
+      }
+
+      66% {
+        transform: translate(-0.3px, 0.5px);
+      }
+    }
+
+    @keyframes idleDrift2 {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      25% {
+        transform: translate(-0.4px, 0.4px);
+      }
+
+      75% {
+        transform: translate(0.4px, -0.2px);
+      }
+    }
+
+    @keyframes idleDrift3 {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      40% {
+        transform: translate(0.3px, 0.5px);
+      }
+
+      80% {
+        transform: translate(-0.5px, -0.3px);
+      }
+    }
+
+    @keyframes idleDrift4 {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
+      }
+
+      20% {
+        transform: translate(-0.2px, -0.4px);
+      }
+
+      60% {
+        transform: translate(0.5px, 0.2px);
+      }
+    }
+
+    /* Hover pauses only the idle drift, not the resolve animation */
+    .landing-card:hover {
+      animation: resolveCard 0.5s var(--ease-resolve) calc(0.35s + var(--card-delay)) both;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
          CHART RAIL — Side Panel Analytical Lens
          ═══════════════════════════════════════════════════════════════ */
-      
-      .chart-rail {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        bottom: 20px;
-        width: 320px;
-        background: rgba(8, 20, 14, 0.85);
-        backdrop-filter: blur(32px);
-        -webkit-backdrop-filter: blur(32px);
-        border: 1px solid rgba(16, 185, 129, 0.15);
-        border-radius: 16px;
-        z-index: 50;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        transform: translateX(340px);
-        opacity: 0;
-        transition: transform 320ms cubic-bezier(0.25, 0.1, 0.25, 1),
-                    opacity 280ms ease;
-      }
-      
-      .chart-rail-open {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      
-      /* Rail Header */
-      .chart-rail-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: 20px;
-        border-bottom: 1px solid rgba(16, 185, 129, 0.08);
-      }
-      
-      .chart-rail-title {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      
-      .chart-rail-intent-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        border-radius: 20px;
-        color: rgba(16, 185, 129, 0.8);
-        font-size: 9px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-      }
-      
-      .chart-rail-metric-label {
-        font-size: 14px;
-        font-weight: 300;
-        color: rgba(255, 255, 255, 0.85);
-        margin: 0;
-        letter-spacing: -0.01em;
-      }
-      
-      .chart-rail-close {
-        padding: 8px;
-        color: rgba(255, 255, 255, 0.4);
-        border-radius: 8px;
-        transition: all 150ms ease;
-      }
-      
-      .chart-rail-close:hover {
-        color: rgba(255, 255, 255, 0.8);
-        background: rgba(255, 255, 255, 0.05);
-      }
-      
-      /* Rail Content */
-      .chart-rail-content {
-        flex: 1;
-        padding: 20px;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
-      
-      .chart-rail-chart {
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(16, 185, 129, 0.08);
-        border-radius: 12px;
-        padding: 16px;
-      }
-      
-      /* Insight Annotation */
-      .chart-rail-insight {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        padding: 12px 16px;
-        background: rgba(16, 185, 129, 0.04);
-        border-left: 2px solid rgba(16, 185, 129, 0.3);
-        border-radius: 0 8px 8px 0;
-      }
-      
-      .chart-rail-insight-line {
-        display: none;
-      }
-      
-      .chart-rail-insight-text {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.6);
-        line-height: 1.5;
-        margin: 0;
-        font-style: italic;
-      }
-      
-      /* Meta Information */
-      .chart-rail-meta {
-        display: flex;
-        gap: 16px;
-        padding-top: 12px;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-      }
-      
-      .chart-rail-meta-item {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      
-      .chart-rail-meta-label {
-        font-size: 8px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: rgba(255, 255, 255, 0.3);
-      }
-      
-      .chart-rail-meta-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
-      }
-      
-      .chart-rail-reason {
-        font-size: 10px;
-        color: rgba(255, 255, 255, 0.35);
-        margin: 0;
-        line-height: 1.5;
-      }
-      
-      /* Visual Connection Line */
-      .chart-rail-connection {
-        pointer-events: none;
-        z-index: 45;
-      }
-      
-      /* Column Highlight Glow */
-      .chart-rail-column-glow {
-        background: linear-gradient(
-          180deg,
+
+    .chart-rail {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      bottom: 20px;
+      width: 320px;
+      background: rgba(8, 20, 14, 0.85);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      border-radius: 16px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transform: translateX(340px);
+      opacity: 0;
+      transition: transform 320ms cubic-bezier(0.25, 0.1, 0.25, 1),
+        opacity 280ms ease;
+    }
+
+    .chart-rail-open {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    /* Rail Header */
+    .chart-rail-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 20px;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.08);
+    }
+
+    .chart-rail-title {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .chart-rail-intent-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 20px;
+      color: rgba(16, 185, 129, 0.8);
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .chart-rail-metric-label {
+      font-size: 14px;
+      font-weight: 300;
+      color: rgba(255, 255, 255, 0.85);
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .chart-rail-close {
+      padding: 8px;
+      color: rgba(255, 255, 255, 0.4);
+      border-radius: 8px;
+      transition: all 150ms ease;
+    }
+
+    .chart-rail-close:hover {
+      color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Rail Content */
+    .chart-rail-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .chart-rail-chart {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    /* Insight Annotation */
+    .chart-rail-insight {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(16, 185, 129, 0.04);
+      border-left: 2px solid rgba(16, 185, 129, 0.3);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .chart-rail-insight-line {
+      display: none;
+    }
+
+    .chart-rail-insight-text {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.5;
+      margin: 0;
+      font-style: italic;
+    }
+
+    /* Meta Information */
+    .chart-rail-meta {
+      display: flex;
+      gap: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .chart-rail-meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .chart-rail-meta-label {
+      font-size: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .chart-rail-meta-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .chart-rail-reason {
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.35);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Visual Connection Line */
+    .chart-rail-connection {
+      pointer-events: none;
+      z-index: 45;
+    }
+
+    /* Column Highlight Glow */
+    .chart-rail-column-glow {
+      background: linear-gradient(180deg,
           rgba(16, 185, 129, 0.03) 0%,
           rgba(16, 185, 129, 0.08) 20%,
           rgba(16, 185, 129, 0.08) 80%,
-          rgba(16, 185, 129, 0.03) 100%
-        );
-        animation: columnGlowPulse 2s ease-in-out infinite;
-      }
-      
-      @keyframes columnGlowPulse {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 1; }
+          rgba(16, 185, 129, 0.03) 100%);
+      animation: columnGlowPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes columnGlowPulse {
+
+      0%,
+      100% {
+        opacity: 0.5;
       }
 
-      /* Chart SVG Container */
-      .chart-svg-container {
-        position: relative;
-      }
-      
-      .chart-svg {
-        display: block;
-      }
-      
-      /* Axis labels - sparse and observational */
-      .chart-axis-label {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 9px;
-        font-weight: 300;
-        fill: rgba(255, 255, 255, 0.35);
-        transition: fill 200ms ease;
-      }
-      
-      .chart-label-median {
-        fill: rgba(16, 185, 129, 0.6);
-        font-weight: 400;
-      }
-      
-      .chart-label-quartile {
-        opacity: 0;
-        transition: opacity 200ms ease;
-      }
-      
-      .chart-svg:hover .chart-label-quartile {
+      50% {
         opacity: 1;
       }
-      
-      /* Hover tooltip */
-      .chart-tooltip {
-        position: absolute;
-        transform: translateX(-50%) translateY(-100%);
-        background: rgba(8, 20, 14, 0.95);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        border-radius: 6px;
-        padding: 8px 12px;
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-        pointer-events: none;
-        z-index: 10;
-        animation: tooltipFadeIn 150ms ease forwards;
-        min-width: 60px;
-      }
-      
-      @keyframes tooltipFadeIn {
-        0% { opacity: 0; transform: translateX(-50%) translateY(-90%); }
-        100% { opacity: 1; transform: translateX(-50%) translateY(-100%); }
-      }
-      
-      .chart-tooltip-value {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.9);
-        white-space: nowrap;
-      }
-      
-      .chart-tooltip-label {
-        font-size: 9px;
-        color: rgba(16, 185, 129, 0.7);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 120px;
-      }
-      
-      .chart-tooltip-count {
-        font-size: 8px;
-        color: rgba(16, 185, 129, 0.6);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-      }
-      
-      /* Matrix cell highlighting from chart hover */
-      .matrix-cell-chart-highlight {
-        background: rgba(16, 185, 129, 0.15) !important;
-        box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.4),
-                    0 0 12px rgba(16, 185, 129, 0.15);
-        transition: all 150ms ease;
-      }
-      
-      /* Bar hover states */
-      .chart-bar-stroke {
-        transition: stroke 150ms ease, stroke-width 150ms ease;
-      }
-      
-      .chart-bar-fill {
-        transition: fill 150ms ease;
-      }
-      
-      /* Matrix layout adjustment when chart rail is open */
-      .matrix-with-chart-rail {
-        margin-right: 340px;
-        transition: margin-right 320ms cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    /* Chart SVG Container */
+    .chart-svg-container {
+      position: relative;
+    }
+
+    .chart-svg {
+      display: block;
+    }
+
+    /* Axis labels - sparse and observational */
+    .chart-axis-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 300;
+      fill: rgba(255, 255, 255, 0.35);
+      transition: fill 200ms ease;
+    }
+
+    .chart-label-median {
+      fill: rgba(16, 185, 129, 0.6);
+      font-weight: 400;
+    }
+
+    .chart-label-quartile {
+      opacity: 0;
+      transition: opacity 200ms ease;
+    }
+
+    .chart-svg:hover .chart-label-quartile {
+      opacity: 1;
+    }
+
+    /* Hover tooltip */
+    .chart-tooltip {
+      position: absolute;
+      transform: translateX(-50%) translateY(-100%);
+      background: rgba(8, 20, 14, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      pointer-events: none;
+      z-index: 10;
+      animation: tooltipFadeIn 150ms ease forwards;
+      min-width: 60px;
+    }
+
+    @keyframes tooltipFadeIn {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-90%);
       }
 
-      /* ═══════════════════════════════════════════════════════════════
+      100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-100%);
+      }
+    }
+
+    .chart-tooltip-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.9);
+      white-space: nowrap;
+    }
+
+    .chart-tooltip-label {
+      font-size: 9px;
+      color: rgba(16, 185, 129, 0.7);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .chart-tooltip-count {
+      font-size: 8px;
+      color: rgba(16, 185, 129, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Matrix cell highlighting from chart hover */
+    .matrix-cell-chart-highlight {
+      background: rgba(16, 185, 129, 0.15) !important;
+      box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.4),
+        0 0 12px rgba(16, 185, 129, 0.15);
+      transition: all 150ms ease;
+    }
+
+    /* Bar hover states */
+    .chart-bar-stroke {
+      transition: stroke 150ms ease, stroke-width 150ms ease;
+    }
+
+    .chart-bar-fill {
+      transition: fill 150ms ease;
+    }
+
+    /* Matrix layout adjustment when chart rail is open */
+    .matrix-with-chart-rail {
+      margin-right: 340px;
+      transition: margin-right 320ms cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
          GRAPH VIEW — Infinite Canvas Styles
          ═══════════════════════════════════════════════════════════════ */
-      
-      .graph-grid-bg {
-        background-image: radial-gradient(rgba(16, 185, 129, 0.15) 1px, transparent 1px);
-        background-size: 32px 32px;
+
+    .graph-grid-bg {
+      background-image: radial-gradient(rgba(16, 185, 129, 0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    .graph-node-transition {
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    /* Solid edge - no animation for clean look */
+    .graph-edge-solid {
+      stroke-dasharray: none;
+    }
+
+    .graph-node-card {
+      transition: all 0.2s ease;
+    }
+
+    .graph-node-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .graph-scale-in {
+      animation: graphScaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes graphScaleIn {
+      from {
+        transform: scale(0.9);
+        opacity: 0;
       }
 
-      .graph-node-transition {
-        transition: box-shadow 0.2s ease, transform 0.2s ease;
+      to {
+        transform: scale(1);
+        opacity: 1;
       }
-      
-      /* Solid edge - no animation for clean look */
-      .graph-edge-solid {
-        stroke-dasharray: none;
+    }
+
+    /* Graph node color variants - dark theme */
+    .graph-node-yellow {
+      --node-bg: #14181d;
+      --node-border: #252a31;
+      --node-header: rgba(251, 191, 36, 0.3);
+      --node-text: #e6eaf0;
+      --node-accent: rgba(251, 191, 36, 0.8);
+    }
+
+    .graph-node-red {
+      --node-bg: #14181d;
+      --node-border: #252a31;
+      --node-header: rgba(244, 63, 94, 0.3);
+      --node-text: #e6eaf0;
+      --node-accent: rgba(244, 63, 94, 0.8);
+    }
+
+    .graph-node-blue {
+      --node-bg: #14181d;
+      --node-border: #252a31;
+      --node-header: rgba(56, 189, 248, 0.3);
+      --node-text: #e6eaf0;
+      --node-accent: rgba(56, 189, 248, 0.8);
+    }
+
+    .graph-node-green {
+      --node-bg: #14181d;
+      --node-border: #252a31;
+      --node-header: rgba(16, 185, 129, 0.3);
+      --node-text: #e6eaf0;
+      --node-accent: rgba(16, 185, 129, 0.8);
+    }
+
+    .graph-node-slate {
+      --node-bg: #14181d;
+      --node-border: #252a31;
+      --node-header: rgba(148, 163, 184, 0.3);
+      --node-text: #e6eaf0;
+      --node-accent: rgba(148, 163, 184, 0.7);
+    }
+
+    .graph-node-orange {
+      --node-bg: #14181d;
+      --node-border: #252a31;
+      --node-header: linear-gradient(90deg, rgba(249, 115, 22, 0.4), rgba(251, 146, 60, 0.4));
+      --node-text: #e6eaf0;
+      --node-accent: rgba(251, 146, 60, 0.8);
+    }
+
+    /* Graph loading spinner */
+    .graph-loading-spinner {
+      border: 3px solid rgba(16, 185, 129, 0.2);
+      border-top-color: rgb(16, 185, 129);
+      animation: graph-spin 0.8s linear infinite;
+    }
+
+    @keyframes graph-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Node entry animation - scales in from center */
+    .graph-node-enter {
+      animation: graph-node-scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes graph-node-scale-in {
+      0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
       }
 
-      .graph-node-card {
-        transition: all 0.2s ease;
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* Edge ink drawing effect - more pronounced */
+    .graph-edge-draw {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: graph-edge-ink 1s ease-out forwards;
+    }
+
+    @keyframes graph-edge-ink {
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    /* Pulse origin animation for streaming */
+    .graph-pulse-origin {
+      animation: graph-pulse-expand 2s ease-out infinite;
+    }
+
+    @keyframes graph-pulse-expand {
+      0% {
+        transform: scale(1);
+        opacity: 0.6;
       }
 
-      .graph-node-card:hover {
-        transform: translateY(-2px);
+      100% {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+
+    /* Loading waveform animation */
+    .loading-waveform {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      height: 16px;
+    }
+
+    .waveform-bar {
+      width: 2px;
+      background: var(--node-accent);
+      border-radius: 1px;
+      animation: waveform-pulse 0.8s ease-in-out infinite;
+    }
+
+    @keyframes waveform-pulse {
+
+      0%,
+      100% {
+        height: 4px;
+        opacity: 0.5;
       }
 
-      .graph-scale-in {
-        animation: graphScaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      }
-      
-      @keyframes graphScaleIn {
-        from { transform: scale(0.9); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-      }
-
-      /* Graph node color variants - dark theme */
-      .graph-node-yellow {
-        --node-bg: rgba(251, 191, 36, 0.08);
-        --node-border: rgba(251, 191, 36, 0.3);
-        --node-header: rgba(251, 191, 36, 0.5);
-        --node-text: rgb(253, 224, 71);
-        --node-accent: rgb(251, 191, 36);
-      }
-      
-      .graph-node-red {
-        --node-bg: rgba(244, 63, 94, 0.08);
-        --node-border: rgba(244, 63, 94, 0.3);
-        --node-header: rgba(244, 63, 94, 0.5);
-        --node-text: rgb(251, 113, 133);
-        --node-accent: rgb(244, 63, 94);
-      }
-      
-      .graph-node-blue {
-        --node-bg: rgba(56, 189, 248, 0.08);
-        --node-border: rgba(56, 189, 248, 0.3);
-        --node-header: rgba(56, 189, 248, 0.5);
-        --node-text: rgb(125, 211, 252);
-        --node-accent: rgb(56, 189, 248);
-      }
-      
-      .graph-node-green {
-        --node-bg: rgba(16, 185, 129, 0.08);
-        --node-border: rgba(16, 185, 129, 0.3);
-        --node-header: rgba(16, 185, 129, 0.5);
-        --node-text: rgb(52, 211, 153);
-        --node-accent: rgb(16, 185, 129);
-      }
-      
-      .graph-node-slate {
-        --node-bg: rgba(100, 116, 139, 0.08);
-        --node-border: rgba(100, 116, 139, 0.3);
-        --node-header: rgba(100, 116, 139, 0.5);
-        --node-text: rgb(148, 163, 184);
-        --node-accent: rgb(100, 116, 139);
-      }
-      
-      .graph-node-orange {
-        --node-bg: rgba(251, 146, 60, 0.08);
-        --node-border: rgba(251, 146, 60, 0.3);
-        --node-header: linear-gradient(90deg, rgb(249, 115, 22), rgb(251, 146, 60));
-        --node-text: rgb(253, 186, 116);
-        --node-accent: rgb(251, 146, 60);
-      }
-
-      /* Graph loading spinner */
-      .graph-loading-spinner {
-        border: 3px solid rgba(16, 185, 129, 0.2);
-        border-top-color: rgb(16, 185, 129);
-        animation: graph-spin 0.8s linear infinite;
-      }
-
-      @keyframes graph-spin {
-        to { transform: rotate(360deg); }
-      }
-
-      /* Node entry animation - scales in from center */
-      .graph-node-enter {
-        animation: graph-node-scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      @keyframes graph-node-scale-in {
-        0% {
-          opacity: 0;
-          transform: scale(0.8) translateY(20px);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1) translateY(0);
-        }
-      }
-
-      /* Edge ink drawing effect - more pronounced */
-      .graph-edge-draw {
-        stroke-dasharray: 1000;
-        stroke-dashoffset: 1000;
-        animation: graph-edge-ink 1s ease-out forwards;
-      }
-
-      @keyframes graph-edge-ink {
-        to {
-          stroke-dashoffset: 0;
-        }
-      }
-
-      /* Pulse origin animation for streaming */
-      .graph-pulse-origin {
-        animation: graph-pulse-expand 2s ease-out infinite;
-      }
-
-      @keyframes graph-pulse-expand {
-        0% {
-          transform: scale(1);
-          opacity: 0.6;
-        }
-        100% {
-          transform: scale(3);
-          opacity: 0;
-        }
-      }
-      /* Loading waveform animation */
-      .loading-waveform {
-        display: flex;
-        align-items: center;
-        gap: 2px;
+      50% {
         height: 16px;
+        opacity: 1;
       }
-      .waveform-bar {
-        width: 2px;
-        background: var(--node-accent);
-        border-radius: 1px;
-        animation: waveform-pulse 0.8s ease-in-out infinite;
-      }
-      @keyframes waveform-pulse {
-        0%, 100% { height: 4px; opacity: 0.5; }
-        50% { height: 16px; opacity: 1; }
-      }
-      .waveform-bar:nth-child(1) { animation-delay: 0.0s; }
-      .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
-      .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
-      .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
-      .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
-    </style>
+    }
+
+    .waveform-bar:nth-child(1) {
+      animation-delay: 0.0s;
+    }
+
+    .waveform-bar:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .waveform-bar:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .waveform-bar:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    .waveform-bar:nth-child(5) {
+      animation-delay: 0.4s;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -1029,8 +1282,10 @@
 }
 </script>
 </head>
-  <body>
-    <div id="root"></div>
+
+<body>
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

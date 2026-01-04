@@ -4,7 +4,8 @@ import { GraphProject, GraphNode as NodeType, Document } from '../../types';
 import GraphSearchBar from './GraphSearchBar';
 import GraphNode, { EdgeDirection, ResizeHandle } from './GraphNode';
 import { graphApi } from '../../services/graphApi';
-import { Combine, X, ArrowRight, Plus, Minus } from 'lucide-react';
+import { Combine, X, ArrowRight, Plus, Minus, Search, Expand, Maximize } from 'lucide-react';
+import { motion, AnimatePresence, animate } from 'framer-motion';
 
 interface GraphCanvasProps {
   project: GraphProject;
@@ -23,6 +24,7 @@ interface NewNodeState {
   startPoint: { x: number; y: number }; // Canvas coords of parent's + button
   sourceNodeId: string;
   sourceDirection: EdgeDirection;
+  context?: string;
 }
 
 interface ResizeState {
@@ -70,6 +72,17 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
   const [newNodeState, setNewNodeState] = useState<NewNodeState | null>(null);
   const [newNodeQuery, setNewNodeQuery] = useState('');
   const newNodeInputRef = useRef<HTMLInputElement>(null);
+  const searchBarRef = useRef<HTMLDivElement>(null);
+
+  // Search to node animation state
+  const [animatingQuery, setAnimatingQuery] = useState<{
+    text: string;
+    startRect: DOMRect;
+    targetPos: { x: number; y: number };
+  } | null>(null);
+
+  // Focus request state (handled by effect after render/measure)
+  const [requestedFocusNodeId, setRequestedFocusNodeId] = useState<string | null>(null);
 
   // Node DOM refs and measured boxes (in canvas coordinates)
   const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -102,6 +115,69 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     setNodeBoxes(boxes);
   }, [project.nodes, offset.x, offset.y, scale, dragPosition]);
 
+  // Focus on a specific node with animation
+  const focusOnNode = useCallback((nodeId: string, customScale?: number) => {
+    const container = containerRef.current;
+    const node = project.nodes.find(n => n.id === nodeId);
+    if (!container || !node) return;
+
+    const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
+    const targetScale = customScale || Math.max(scale, 0.85); // Focus zoom level
+
+    // Node dimensions (approximate if not yet measured)
+    const box = nodeBoxes[nodeId];
+    const nodeWidth = box?.width || 300;
+    const nodeHeight = box?.height || 200;
+
+    // Calculate target offset to center the node
+    // Formula: (containerWidth / 2) - (nodeCenterX * scale) = offset.x
+    const targetOffsetX = (containerWidth / 2) - (node.position.x + nodeWidth / 2) * targetScale;
+    const targetOffsetY = (containerHeight / 2) - (node.position.y + nodeHeight / 2) * targetScale;
+
+    // Animate scale and offset
+    animate(scale, targetScale, {
+      type: "spring",
+      stiffness: 80,
+      damping: 18,
+      onUpdate: (latest) => setScale(latest)
+    });
+
+    animate(offset.x, targetOffsetX, {
+      type: "spring",
+      stiffness: 80,
+      damping: 18,
+      onUpdate: (latest) => setOffset(prev => ({ ...prev, x: latest }))
+    });
+
+    animate(offset.y, targetOffsetY, {
+      type: "spring",
+      stiffness: 80,
+      damping: 18,
+      onUpdate: (latest) => setOffset(prev => ({ ...prev, y: latest }))
+    });
+  }, [project.nodes, scale, offset, nodeBoxes]);
+
+  // Effect to handle focus requests once node is measured
+  useEffect(() => {
+    if (requestedFocusNodeId) {
+      const node = project.nodes.find(n => n.id === requestedFocusNodeId);
+      const box = nodeBoxes[requestedFocusNodeId];
+
+      // We need the node to exist and its dimensions to be measured for accurate focusing
+      if (node && box) {
+        focusOnNode(requestedFocusNodeId);
+        setRequestedFocusNodeId(null);
+      }
+    }
+  }, [requestedFocusNodeId, project.nodes, nodeBoxes, focusOnNode]);
+
+  // Focus on single selection
+  useEffect(() => {
+    if (selectedNodes.length === 1) {
+      setRequestedFocusNodeId(selectedNodes[0]);
+    }
+  }, [selectedNodes]);
+
   // Get connection point position based on direction
   const getConnectionPoint = useCallback((node: NodeType, direction: EdgeDirection) => {
     // Get position - check if this node is being dragged
@@ -119,6 +195,29 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       case 'right': return { x: pos.x + nodeWidth, y: pos.y + nodeHeight / 2 };
     }
   }, [draggedNodeId, dragPosition]);
+
+  const checkCollisions = useCallback((x: number, y: number, width: number, height: number, padding: number = 40) => {
+    const rect1 = {
+      left: x - padding,
+      top: y - padding,
+      right: x + width + padding,
+      bottom: y + height + padding
+    };
+
+    return Object.values(nodeBoxes).some(box => {
+      const rect2 = {
+        left: box.x,
+        top: box.y,
+        right: box.x + box.width,
+        bottom: box.y + box.height
+      };
+
+      return !(rect1.right < rect2.left ||
+        rect1.left > rect2.right ||
+        rect1.bottom < rect2.top ||
+        rect1.top > rect2.bottom);
+    });
+  }, [nodeBoxes]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (draggedNodeId || edgeDrag) return;
@@ -139,6 +238,22 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
   // Applied right-to-left: first scale, then translate
   // So: screenPos = canvasPos * scale + offset + containerPos
   // Inverse: canvasPos = (screenPos - containerPos - offset) / scale
+  const getAdaptivePosition = useCallback((sourceNode: NodeType, proposedWidth: number = 300, proposedHeight: number = 200, gap: number = 100) => {
+    const nodeWidth = sourceNode.width || 300;
+    const rightX = sourceNode.position.x + nodeWidth + gap;
+    const leftX = sourceNode.position.x - proposedWidth - gap;
+    const posY = sourceNode.position.y;
+
+    const rightBlocked = checkCollisions(rightX, posY, proposedWidth, proposedHeight);
+    const leftBlocked = checkCollisions(leftX, posY, proposedWidth, proposedHeight);
+
+    // If right is blocked but left is free, use left
+    if (rightBlocked && !leftBlocked) {
+      return { position: { x: leftX, y: posY }, direction: 'left' as EdgeDirection };
+    }
+    // Default to right
+    return { position: { x: rightX, y: posY }, direction: 'right' as EdgeDirection };
+  }, [checkCollisions]);
   const viewportToCanvas = (clientX: number, clientY: number): { x: number; y: number } => {
     const container = containerRef.current;
     if (!container) return { x: 0, y: 0 };
@@ -198,7 +313,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
 
       if (nodeEl) {
         // Find the content container inside the node
-        const contentContainer = nodeEl.querySelector('.rounded-2xl');
+        const contentContainer = nodeEl.querySelector('.rounded-none');
         if (contentContainer) {
           // Calculate minHeight by summing the natural heights of all children
           // This allows the node to shrink until it just fits the content
@@ -309,18 +424,47 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
         // Dropped on another node - create an actual merge node on the canvas
         const targetNode = project.nodes.find(n => n.id === hoveredNodeId);
         if (targetNode) {
-          // Position the merge node between/below the two parent nodes
-          const sourcePos = sourceNode.position;
-          const targetPos = targetNode.position;
-          const mergeX = (sourcePos.x + targetPos.x) / 2;
-          const mergeY = Math.max(sourcePos.y, targetPos.y) + 320;
+          // Calculate dimensions for accurate placement
+          const getDims = (node: NodeType) => {
+            const box = nodeBoxes[node.id];
+            if (box) return { w: box.width, h: box.height };
+            const nodeEl = nodeRefs.current[node.id];
+            return {
+              w: node.width || (nodeEl?.offsetWidth || 300),
+              h: node.height || (nodeEl?.offsetHeight || 200)
+            };
+          };
+
+          const sDims = getDims(sourceNode);
+          const tDims = getDims(targetNode);
+
+          // Position based on interaction direction to prevent overlap
+          let mergeX = (sourceNode.position.x + targetNode.position.x) / 2;
+          let mergeY = (sourceNode.position.y + targetNode.position.y) / 2;
+
+          const offset = 400; // Consistent margin to prevent overlap
+
+          switch (edgeDrag.sourceDirection) {
+            case 'bottom':
+              mergeY = Math.max(sourceNode.position.y + sDims.h, targetNode.position.y + tDims.h) + offset;
+              break;
+            case 'top':
+              mergeY = Math.min(sourceNode.position.y, targetNode.position.y) - offset - 400; // Extra room for modal height
+              break;
+            case 'right':
+              mergeX = Math.max(sourceNode.position.x + sDims.w, targetNode.position.x + tDims.w) + offset;
+              break;
+            case 'left':
+              mergeX = Math.min(sourceNode.position.x, targetNode.position.x) - offset - 300; // Extra room for modal width
+              break;
+          }
 
           // Create the merge node with pendingMerge data
           const mergeNodeId = Math.random().toString(36).substr(2, 9);
           const mergeNode: NodeType = {
             id: mergeNodeId,
             title: 'Merge Node',
-            content: [],
+            content: '',
             color: 'orange',
             position: { x: mergeX, y: mergeY },
             connectedTo: [],
@@ -343,6 +487,9 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
           const newNodes = [...updatedNodes, mergeNode];
           currentNodesRef.current = newNodes;
           onUpdateProject({ nodes: newNodes });
+
+          // Focus on the intermediate merge node
+          setRequestedFocusNodeId(mergeNodeId);
 
           // Generate merge suggestions asynchronously
           generateMergeSuggestions(sourceNode, targetNode).then(suggestions => {
@@ -447,14 +594,44 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     setIsNewNodeDragging(false);
   };
 
-  // Zoom controls
+  // Zoom controls (center-based)
   const zoomIn = useCallback(() => {
-    setScale(s => Math.min(s + 0.15, 3));
-  }, []);
+    const container = containerRef.current;
+    if (!container) return;
+    const { width, height } = container.getBoundingClientRect();
+
+    // Zoom toward center
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    const newScale = Math.min(scale + 0.15, 3);
+    if (newScale !== scale) {
+      setOffset({
+        x: centerX - (centerX - offset.x) * (newScale / scale),
+        y: centerY - (centerY - offset.y) * (newScale / scale)
+      });
+      setScale(newScale);
+    }
+  }, [scale, offset]);
 
   const zoomOut = useCallback(() => {
-    setScale(s => Math.max(s - 0.15, 0.2));
-  }, []);
+    const container = containerRef.current;
+    if (!container) return;
+    const { width, height } = container.getBoundingClientRect();
+
+    // Zoom toward center
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    const newScale = Math.max(scale - 0.15, 0.2);
+    if (newScale !== scale) {
+      setOffset({
+        x: centerX - (centerX - offset.x) * (newScale / scale),
+        y: centerY - (centerY - offset.y) * (newScale / scale)
+      });
+      setScale(newScale);
+    }
+  }, [scale, offset]);
 
   // Use native event listener with passive: false to properly prevent browser zoom
   useEffect(() => {
@@ -465,17 +642,31 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       // Prevent default for ALL wheel events to stop browser back/forward navigation
       e.preventDefault();
 
-      // Pinch-to-zoom on trackpad triggers ctrlKey
+      const containerRect = container.getBoundingClientRect();
+
+      // Pinch-to-zoom on trackpad calls this
       if (e.ctrlKey || e.metaKey) {
         e.stopPropagation();
-        const delta = -e.deltaY * 0.002;
-        setScale(s => Math.min(Math.max(s + delta, 0.2), 3));
+
+        const delta = -e.deltaY * 0.005;
+        const newScale = Math.min(Math.max(scale + delta, 0.2), 3);
+
+        if (newScale !== scale) {
+          const mouseX = e.clientX - containerRect.left;
+          const mouseY = e.clientY - containerRect.top;
+
+          setOffset({
+            x: mouseX - (mouseX - offset.x) * (newScale / scale),
+            y: mouseY - (mouseY - offset.y) * (newScale / scale)
+          });
+          setScale(newScale);
+        }
       } else {
         // Regular scroll for panning
-        setOffset(prev => ({
-          x: prev.x - e.deltaX,
-          y: prev.y - e.deltaY
-        }));
+        setOffset({
+          x: offset.x - e.deltaX,
+          y: offset.y - e.deltaY
+        });
       }
     };
 
@@ -485,10 +676,11 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     return () => {
       container.removeEventListener('wheel', handleWheel);
     };
-  }, []);
+  }, [scale, offset]); // Add dependencies to ensure fresh state access
 
   const handleNodeDragStart = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent text selection
     setDraggedNodeId(id);
     const node = project.nodes.find(n => n.id === id);
     if (node) {
@@ -547,8 +739,8 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          source_node: { title: source.title, content: source.content },
-          target_node: { title: target.title, content: target.content }
+          source_node: { title: source.title, content: Array.isArray(source.content) ? (source.content as any).join('\n') : source.content },
+          target_node: { title: target.title, content: Array.isArray(target.content) ? (target.content as any).join('\n') : target.content }
         })
       });
 
@@ -583,13 +775,13 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       const result = await graphApi.mergeNodes([sourceNode, targetNode]);
 
       // Transform the merge node into a regular content node
-      const updatedNodes = currentNodesRef.current.map(n =>
+      const updatedNodes: NodeType[] = currentNodesRef.current.map(n =>
         n.id === nodeId
           ? {
             ...n,
             title: result.node.title,
-            content: result.node.content,
-            color: 'orange',
+            content: result.node.content as any,
+            color: 'orange' as NodeType['color'],
             pendingMerge: undefined // Remove pending merge state
           }
           : n
@@ -597,6 +789,9 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
 
       currentNodesRef.current = updatedNodes;
       onUpdateProject({ nodes: updatedNodes });
+
+      // Focus on the newly merged node
+      setRequestedFocusNodeId(nodeId);
     } catch (err) {
       console.error('Error completing merge:', err);
     } finally {
@@ -612,7 +807,11 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       const sourceNode = project.nodes.find(n => n.id === newNodeState.sourceNodeId);
       if (!sourceNode) return;
 
-      const result = await graphApi.createNode(newNodeQuery, sourceNode, project.documents);
+      const fullQuery = newNodeState.context
+        ? `Context from current node: "${newNodeState.context}"\n\nUser Query: ${newNodeQuery}`
+        : newNodeQuery;
+
+      const result = await graphApi.createNode(fullQuery, sourceNode, project.documents);
 
       const newNodeId = Math.random().toString(36).substr(2, 9);
       const newNode: NodeType = {
@@ -625,14 +824,19 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
         parentId: newNodeState.sourceNodeId
       };
 
-      // Connect source node to the new node
-      const updatedNodes = project.nodes.map(n =>
+      const updatedNodes: NodeType[] = project.nodes.map(n =>
         n.id === newNodeState.sourceNodeId
           ? { ...n, connectedTo: [...n.connectedTo, newNodeId] }
           : n
       );
 
-      onUpdateProject({ nodes: [...updatedNodes, newNode] });
+      const allNodes: NodeType[] = [...updatedNodes, newNode];
+      onUpdateProject({ nodes: allNodes });
+      currentNodesRef.current = allNodes;
+
+      // Focus on the newly created node
+      setSelectedNodes([newNodeId]);
+      setRequestedFocusNodeId(newNodeId);
     } catch (err) {
       console.error('Error creating node:', err);
     } finally {
@@ -645,30 +849,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
   // Store refs for streaming state management
   const currentNodesRef = useRef<NodeType[]>(project.nodes);
   currentNodesRef.current = project.nodes;
-
-  const handleQuery = async (query: string, docIds: string[]) => {
-    const selectedDocs = project.documents.filter(d => docIds.includes(d.id));
-
-    const queryNodeX = (-offset.x + window.innerWidth / 2) / scale - 150;
-    const queryNodeY = (-offset.y + 120) / scale;
-
-    setIsStreaming(true);
-    setHasGeneratedNodes(true);
-
-    const queryNodeId = Math.random().toString(36).substr(2, 9);
-    const queryNode: NodeType = {
-      id: queryNodeId,
-      title: query,
-      content: [`Analyzing ${selectedDocs.length} document${selectedDocs.length > 1 ? 's' : ''}...`],
-      color: 'slate',
-      position: { x: queryNodeX, y: queryNodeY },
-      connectedTo: []
-    };
-
-    const nodesWithQuery = [...currentNodesRef.current, queryNode];
-    currentNodesRef.current = nodesWithQuery;
-    onUpdateProject({ nodes: nodesWithQuery });
-
+  const startStreaming = async (query: string, selectedDocs: Document[], queryNodeId: string, queryNodeX: number, queryNodeY: number) => {
     try {
       await graphApi.generateGraphStream(
         query,
@@ -689,7 +870,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
           const newNode: NodeType = {
             id: Math.random().toString(36).substr(2, 9),
             title: nodeData.title,
-            content: nodeData.content,
+            content: nodeData.content as any,
             color: nodeData.color as NodeType['color'],
             position: {
               x: queryNodeX + xOffset,
@@ -701,17 +882,22 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
 
           const updatedNodes = currentNodesRef.current.map(n =>
             n.id === queryNodeId
-              ? { ...n, connectedTo: [...n.connectedTo, newNode.id] }
+              ? { ...n, connectedTo: [...n.connectedTo, newNode.id], isLoading: false } // Clear loading as soon as first result arrives
               : n
           );
           const newNodes = [...updatedNodes, newNode];
           currentNodesRef.current = newNodes;
           onUpdateProject({ nodes: newNodes });
+
+          // Focus on the first node of the stream
+          if (index === 0) {
+            setRequestedFocusNodeId(newNode.id);
+          }
         },
         () => {
           const finalNodes = currentNodesRef.current.map(n =>
             n.id === queryNodeId
-              ? { ...n, content: [`${selectedDocs.length} document${selectedDocs.length > 1 ? 's' : ''} analyzed`] }
+              ? { ...n, content: `${selectedDocs.length} document${selectedDocs.length > 1 ? 's' : ''} analyzed` }
               : n
           );
           currentNodesRef.current = finalNodes;
@@ -729,13 +915,59 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     }
   };
 
+  const handleQuery = async (query: string, docIds: string[]) => {
+    const selectedDocs = project.documents.filter(d => docIds.includes(d.id));
+
+    const queryNodeX = (-offset.x + window.innerWidth / 2) / scale - 150;
+    const queryNodeY = (-offset.y + 120) / scale;
+
+    setIsStreaming(true);
+    setHasGeneratedNodes(true);
+
+    const queryNodeId = Math.random().toString(36).substr(2, 9);
+    const queryNode: NodeType = {
+      id: queryNodeId,
+      title: query,
+      content: `Analyzing ${selectedDocs.length} document${selectedDocs.length > 1 ? 's' : ''}...`,
+      color: 'slate',
+      position: { x: queryNodeX, y: queryNodeY },
+      connectedTo: [],
+      isLoading: true
+    };
+
+    // Capture search bar position for animation
+    if (searchBarRef.current) {
+      const rect = searchBarRef.current.getBoundingClientRect();
+      setAnimatingQuery({
+        text: query,
+        startRect: rect,
+        targetPos: { x: queryNodeX, y: queryNodeY }
+      });
+
+      // Wait for animation to finish before showing the node and starting the stream
+      setTimeout(() => {
+        setAnimatingQuery(null);
+        const nodesWithQuery = [...currentNodesRef.current, queryNode];
+        currentNodesRef.current = nodesWithQuery;
+        onUpdateProject({ nodes: nodesWithQuery });
+        startStreaming(query, selectedDocs, queryNodeId, queryNodeX, queryNodeY);
+      }, 800);
+    } else {
+      // Fallback if search bar ref is missing
+      const nodesWithQuery = [...currentNodesRef.current, queryNode];
+      currentNodesRef.current = nodesWithQuery;
+      onUpdateProject({ nodes: nodesWithQuery });
+      startStreaming(query, selectedDocs, queryNodeId, queryNodeX, queryNodeY);
+    }
+  };
+
   const onExpandNode = async (node: NodeType, query?: string): Promise<void> => {
     try {
       const result = await graphApi.expandNode(node, project.documents, query);
       const newNodes: NodeType[] = result.nodes.map((n, i) => ({
         id: Math.random().toString(36).substr(2, 9),
         title: n.title,
-        content: n.content,
+        content: String(n.content),
         color: n.color,
         position: { x: node.position.x + (i - 0.5) * 400, y: node.position.y + 400 },
         connectedTo: [],
@@ -749,11 +981,126 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       onUpdateProject({
         nodes: [...updatedProjectNodes, ...newNodes]
       });
+
+      // Focus on the first newly expanded node
+      if (newNodes.length > 0) {
+        setRequestedFocusNodeId(newNodes[0].id);
+      }
     } catch (err) {
       console.error('Error expanding node:', err);
-    } finally {
-      // Inline loading handled by GraphNode
     }
+  };
+
+  const handleSummarizeSelection = async (node: NodeType, text: string) => {
+    try {
+      setIsLoading(true);
+      const summaryQuery = `Summarize this specific section: "${text}"`;
+      const result = await graphApi.createNode(summaryQuery, node, project.documents);
+
+      const { position: newPosition, direction } = getAdaptivePosition(node);
+      const startPoint = getConnectionPoint(node, direction);
+
+      const newNodeId = Math.random().toString(36).substr(2, 9);
+      const newNode: NodeType = {
+        id: newNodeId,
+        title: `Summary: ${text.slice(0, 20)}...`,
+        content: result.node.content,
+        color: result.node.color,
+        position: newPosition,
+        connectedTo: [],
+        parentId: node.id
+      };
+
+      const updatedNodes: NodeType[] = project.nodes.map(n =>
+        n.id === node.id ? { ...n, connectedTo: [...n.connectedTo, newNodeId] } : n
+      );
+      onUpdateProject({ nodes: [...updatedNodes, newNode] });
+
+      // Select and focus on the new summary node
+      setSelectedNodes([newNodeId]);
+      setRequestedFocusNodeId(newNodeId);
+    } catch (err) {
+      console.error('Error summarizing selection:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExpandSelection = async (node: NodeType, text: string) => {
+    const expandQuery = `Expand on this specific point from the source: "${text}"`;
+    await onExpandNode(node, expandQuery);
+  };
+
+  const handleCreateNodeFromSelection = async (node: NodeType, selectedText: string, query: string) => {
+    try {
+      setIsLoading(true);
+      const fullQuery = `Context from selected text: "${selectedText}"\n\nQuery: ${query}`;
+      const result = await graphApi.createNode(fullQuery, node, project.documents);
+
+      const { position: newPosition, direction } = getAdaptivePosition(node);
+      const startPoint = getConnectionPoint(node, direction);
+
+      const newNodeId = Math.random().toString(36).substr(2, 9);
+      const newNode: NodeType = {
+        id: newNodeId,
+        title: result.node.title,
+        content: result.node.content,
+        color: result.node.color,
+        position: newPosition,
+        connectedTo: [],
+        parentId: node.id
+      };
+
+      const updatedNodes: NodeType[] = project.nodes.map(n =>
+        n.id === node.id ? { ...n, connectedTo: [...n.connectedTo, newNodeId] } : n
+      );
+      onUpdateProject({ nodes: [...updatedNodes, newNode] });
+
+      // Select and focus on the new node
+      setSelectedNodes([newNodeId]);
+      setRequestedFocusNodeId(newNodeId);
+    } catch (err) {
+      console.error('Error creating node from selection:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExtensionRequest = (node: NodeType, selectedText: string) => {
+    // Try right side first
+    const nodeWidth = node.width || 300;
+    const gap = 100;
+    const proposedWidth = 300; // Estimated new node width
+    const proposedHeight = 200; // Estimated new node height
+
+    const rightX = node.position.x + nodeWidth + gap;
+    const leftX = node.position.x - proposedWidth - gap;
+    const posY = node.position.y;
+
+    const rightBlocked = checkCollisions(rightX, posY, proposedWidth, proposedHeight);
+    const leftBlocked = checkCollisions(leftX, posY, proposedWidth, proposedHeight);
+
+    let direction: EdgeDirection = 'right';
+    let newPosition = { x: rightX, y: posY };
+
+    // If right is blocked but left is free, use left
+    if (rightBlocked && !leftBlocked) {
+      direction = 'left';
+      newPosition = { x: leftX, y: posY };
+    }
+
+    const startPoint = getConnectionPoint(node, direction);
+
+    setNewNodeState({
+      position: newPosition,
+      startPoint: startPoint,
+      sourceNodeId: node.id,
+      sourceDirection: direction,
+      context: selectedText
+    });
+
+    // Auto-focus input - relies on newNodeState turning on the input UI
+    setNewNodeQuery('');
   };
 
   const onMergeNodes = async () => {
@@ -763,8 +1110,26 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       const nodesToMerge = project.nodes.filter(n => selectedNodes.includes(n.id));
       const result = await graphApi.mergeNodes(nodesToMerge);
 
+      // Helper to get node dimensions for placement
+      const getDims = (node: NodeType) => {
+        const box = nodeBoxes[node.id];
+        if (box) return { w: box.width, h: box.height };
+        const nodeEl = nodeRefs.current[node.id];
+        return {
+          w: node.width || (nodeEl?.offsetWidth || 300),
+          h: node.height || (nodeEl?.offsetHeight || 200)
+        };
+      };
+
       const avgX = nodesToMerge.reduce((acc, n) => acc + n.position.x, 0) / nodesToMerge.length;
-      const avgY = Math.max(...nodesToMerge.map(n => n.position.y)) + 400;
+
+      // Find the lowest point of all merged nodes to place below them
+      const lowestY = Math.max(...nodesToMerge.map(n => {
+        const dims = getDims(n);
+        return n.position.y + dims.h;
+      }));
+
+      const newNodeY = lowestY + 400; // 400px margin
 
       const newNodeId = Math.random().toString(36).substr(2, 9);
       const newNode: NodeType = {
@@ -772,7 +1137,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
         title: result.node.title,
         content: result.node.content,
         color: 'orange',
-        position: { x: avgX, y: avgY },
+        position: { x: avgX, y: newNodeY },
         connectedTo: [],
       };
 
@@ -781,9 +1146,13 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
           ? { ...n, connectedTo: [...n.connectedTo, newNodeId] }
           : n
       );
-
-      onUpdateProject({ nodes: [...updatedNodes, newNode] });
+      const allNodes: NodeType[] = [...updatedNodes, newNode];
+      onUpdateProject({ nodes: allNodes });
+      currentNodesRef.current = allNodes;
       setSelectedNodes([]);
+
+      // Focus on the new batch merge node
+      setRequestedFocusNodeId(newNodeId);
     } catch (err) {
       console.error('Error merging nodes:', err);
     } finally {
@@ -828,7 +1197,85 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     setSelectedNodes([]);
   }, [project.nodes, selectedNodes, onUpdateProject]);
 
-  // Keyboard shortcut for Cmd+Delete/Backspace to delete selected nodes
+  // Fit to view (auto-center)
+  const fitToView = useCallback(() => {
+    if (project.nodes.length === 0) {
+      // If no nodes, reset to center/default
+      setOffset({ x: 0, y: 0 });
+      setScale(0.65);
+      return;
+    }
+
+    const container = containerRef.current;
+    if (!container) return;
+    const { width: containerWidth, height: containerHeight } = container.getBoundingClientRect();
+
+    // 1. Calculate bounding box of all nodes
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+    project.nodes.forEach(node => {
+      // Use nodeBoxes if available for more accuracy including content size,
+      // otherwise use node.position and defaults
+      const box = nodeBoxes[node.id];
+      let x, y, w, h;
+
+      if (box) {
+        x = box.x;
+        y = box.y;
+        w = box.width;
+        h = box.height;
+      } else {
+        const nodeEl = nodeRefs.current[node.id];
+        x = node.position.x;
+        y = node.position.y;
+        w = node.width || (nodeEl?.offsetWidth || 300);
+        h = node.height || (nodeEl?.offsetHeight || 200);
+      }
+
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x + w > maxX) maxX = x + w;
+      if (y + h > maxY) maxY = y + h;
+    });
+
+    if (minX === Infinity) return;
+
+    const nodesWidth = maxX - minX;
+    const nodesHeight = maxY - minY;
+    const nodesCenterX = minX + nodesWidth / 2;
+    const nodesCenterY = minY + nodesHeight / 2;
+
+    // 2. Calculate scale to fit
+    const padding = 100; // px
+    // Available space
+    const availableWidth = containerWidth - padding * 2;
+    const availableHeight = containerHeight - padding * 2;
+
+    const scaleX = availableWidth / nodesWidth;
+    const scaleY = availableHeight / nodesHeight;
+
+    // Choose the smaller scale to ensure everything fits, clamp to reasonable limits
+    // Use 1.0 as max scale to avoid zooming in too much on few nodes
+    const targetScale = Math.min(Math.max(Math.min(scaleX, scaleY), 0.2), 1.2);
+
+    // 3. Calculate offset to center the content
+    // We want the center of the nodes (nodesCenterX, nodesCenterY) to be at the center of the container
+    // ScreenPos = CanvasPos * Scale + Offset
+    // ContainerCenter = NodesCenter * TargetScale + TargetOffset
+    // TargetOffset = ContainerCenter - NodesCenter * TargetScale
+
+    const targetOffset = {
+      x: (containerWidth / 2) - (nodesCenterX * targetScale),
+      y: (containerHeight / 2) - (nodesCenterY * targetScale)
+    };
+
+    // Apply
+    setScale(targetScale);
+    setOffset(targetOffset);
+
+  }, [project.nodes, nodeBoxes]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd+Delete or Cmd+Backspace to delete selected nodes
@@ -838,15 +1285,24 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
           deleteSelectedNodes();
         }
       }
+
+      // Cmd+I for Fit to View
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        fitToView();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedNodes, deleteSelectedNodes]);
+  }, [selectedNodes, deleteSelectedNodes, fitToView]);
+
+  const isInteracting = !!(draggedNodeId || isPanning || edgeDrag || resizeState || isNewNodeDragging || selectionBox);
 
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden graph-grid-bg bg-[#030a06] ${edgeDrag ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
+      className={`absolute inset-0 overflow-hidden graph-grid-bg bg-[#0c0f13] select-none ${edgeDrag ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'
+        }`}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -1051,7 +1507,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
                 {/* Outer Glow */}
                 <path
                   d={path}
-                  stroke="rgba(16, 185, 129, 0.05)"
+                  stroke="rgba(251, 146, 60, 0.05)"
                   strokeWidth="8"
                   fill="none"
                   strokeLinecap="round"
@@ -1059,7 +1515,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
                 {/* Main line - mixed dashed to indicate pending connection */}
                 <path
                   d={path}
-                  stroke="rgba(16, 185, 129, 0.25)"
+                  stroke="rgba(251, 146, 60, 0.25)"
                   strokeWidth="2"
                   fill="none"
                   strokeLinecap="round"
@@ -1079,7 +1535,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
                   cy={startPoint.y}
                   r={4}
                   fill="rgba(255, 255, 255, 0.6)"
-                  stroke="rgba(16, 185, 129, 0.4)"
+                  stroke="rgba(251, 146, 60, 0.4)"
                   strokeWidth="1.5"
                 />
                 {/* End dot at new node input */}
@@ -1088,7 +1544,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
                   cy={endY}
                   r={4}
                   fill="rgba(255, 255, 255, 0.6)"
-                  stroke="rgba(16, 185, 129, 0.4)"
+                  stroke="rgba(251, 146, 60, 0.4)"
                   strokeWidth="1.5"
                 />
               </g>
@@ -1125,7 +1581,20 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
                 onResizeStart={(handle, e) => handleResizeStart(node.id, handle, e)}
                 onDelete={() => deleteNode(node.id)}
                 onMergeSelect={(query) => handleMergeNodeSelect(node.id, query)}
+                onExpandSelection={(text) => handleExpandSelection(node, text)}
+                onSummarizeSelection={(text) => handleSummarizeSelection(node, text)}
+                onCreateNodeFromSelection={(text, query) => handleCreateNodeFromSelection(node, text, query)}
+                onExtensionRequest={(text) => handleExtensionRequest(node, text)}
+                onFocusRequest={() => focusOnNode(node.id)}
                 parentNodeNames={parentNodeNames}
+                onUpdate={(newContent) => {
+                  const updatedNodes = project.nodes.map(n =>
+                    n.id === node.id ? { ...n, content: newContent } : n
+                  );
+                  currentNodesRef.current = updatedNodes;
+                  onUpdateProject({ nodes: updatedNodes });
+                }}
+                scale={scale}
                 innerRef={setNodeRef(node.id)}
               />
             );
@@ -1151,12 +1620,12 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
               setIsNewNodeDragging(true);
             }}
           >
-            <div className="w-[300px] bg-[#0a1a0f] border border-emerald-500/30 rounded-2xl p-4 shadow-2xl">
+            <div className="w-[300px] bg-[#14181d] border border-[#252a31] rounded-none p-4 shadow-2xl">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-[10px] text-emerald-500 uppercase tracking-wider font-bold select-none">New Connected Node</div>
+                <div className="text-[10px] uppercase tracking-wider font-bold select-none" style={{ color: '#e6eaf0' }}>New Connected Node</div>
                 <button
                   onClick={() => { setNewNodeState(null); setNewNodeQuery(''); }}
-                  className="p-1 rounded hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
+                  className="p-1 rounded-none hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
                   title="Cancel"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -1176,13 +1645,14 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
                     }
                   }}
                   placeholder="What should this node contain?"
-                  className="flex-1 px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-[12px] text-white placeholder-slate-500 outline-none focus:border-emerald-500/50"
+                  className="flex-1 px-3 py-2 bg-black/40 border border-white/10 rounded-none text-[12px] placeholder-slate-500 outline-none focus:border-orange-500/40 select-text"
+                  style={{ color: '#b9c0cc' }}
                   autoFocus
                 />
                 <button
                   onClick={handleCreateNewNode}
                   disabled={!newNodeQuery.trim() || isLoading}
-                  className="p-2 bg-emerald-500 text-black rounded-lg hover:bg-emerald-400 disabled:opacity-50 transition-colors"
+                  className="p-2 bg-orange-500 text-black rounded-none hover:bg-orange-400 disabled:opacity-50 transition-colors"
                 >
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -1194,15 +1664,126 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       </div>
 
       {/* Search Bar */}
-      {!hasGeneratedNodes && (
+      {!hasGeneratedNodes && !animatingQuery && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 pointer-events-auto z-50">
           <GraphSearchBar
+            ref={searchBarRef}
             documents={project.documents}
             onQuery={handleQuery}
             isLoading={isLoading}
           />
         </div>
       )}
+
+      {/* Search to Node Animation Overlay */}
+      <AnimatePresence>
+        {animatingQuery && (
+          <motion.div
+            initial={{
+              x: animatingQuery.startRect.left,
+              y: animatingQuery.startRect.top,
+              width: animatingQuery.startRect.width,
+              height: animatingQuery.startRect.height,
+              opacity: 1,
+              borderRadius: '0px',
+              backgroundColor: '#14181d',
+              borderColor: '#252a31',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+            }}
+            animate={{
+              x: animatingQuery.targetPos.x * scale + offset.x,
+              y: animatingQuery.targetPos.y * scale + offset.y,
+              width: 300 * scale,
+              height: 180 * scale,
+              opacity: 1,
+              borderRadius: '0px',
+              backgroundColor: '#14181d',
+              borderColor: '#252a31',
+              boxShadow: '0 20px 50px -10px rgba(0,0,0,0.5)'
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 60,
+              damping: 14,
+              mass: 1.2
+            }}
+            className="fixed z-[100] border overflow-hidden flex flex-col shadow-2xl pointer-events-none backdrop-blur-xl"
+          >
+            {/* Header Content Bar - Matches GraphNode */}
+            <motion.div
+              className="w-full h-1.5 shrink-0"
+              initial={{ backgroundColor: 'transparent' }}
+              animate={{ backgroundColor: 'rgba(100, 116, 139, 0.5)' }} // graph-node-slate header
+              transition={{ delay: 0.3 }}
+            />
+
+            {/* Content Area - Matches GraphNode p-5 */}
+            <div className="relative flex-1 p-5 flex flex-col">
+              {/* Title Row */}
+              <div className="flex items-start justify-between mb-4 gap-3">
+                <motion.h3
+                  className="font-semibold leading-snug"
+                  initial={{ fontSize: '13px', color: '#b9c0cc' }}
+                  animate={{ fontSize: '15px', color: '#e6eaf0' }}
+                  transition={{ duration: 0.6 }}
+                >
+                  {animatingQuery.text}
+                </motion.h3>
+
+                {/* Right side icons - Fades in Select Checkbox */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="w-5 h-5 rounded-none border border-slate-600 shrink-0"
+                />
+              </div>
+
+              {/* Content Points - Fades in matching GraphNode layout */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.4 }}
+                className="space-y-2.5"
+              >
+                {/* Waveform loading bar - Moved to top to match GraphNode */}
+                <div className="mb-4 flex flex-col items-center justify-center gap-2">
+                  <div className="loading-waveform">
+                    <div className="waveform-bar" style={{ backgroundColor: '#111827' }} />
+                    <div className="waveform-bar" style={{ backgroundColor: '#111827' }} />
+                    <div className="waveform-bar" style={{ backgroundColor: '#111827' }} />
+                    <div className="waveform-bar" style={{ backgroundColor: '#111827' }} />
+                    <div className="waveform-bar" style={{ backgroundColor: '#111827' }} />
+                  </div>
+                  <span className="text-[10px] text-slate-500/70 uppercase tracking-widest font-bold">Analyzing...</span>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <div className="w-1.5 h-1.5 rounded-none mt-1.5 shrink-0" style={{ backgroundColor: 'rgb(100, 116, 139)' }} />
+                  <div className="h-2 w-full mt-1.5 bg-slate-700/30 rounded-none" />
+                </div>
+              </motion.div>
+
+              {/* Footer Button - Matches GraphNode Expand button */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6 }}
+                className="mt-auto flex justify-end"
+              >
+                <div
+                  className="px-3 py-1.5 rounded-none text-[9px] font-bold uppercase tracking-[0.12em] flex items-center gap-1.5"
+                  style={{ background: 'rgba(100, 116, 139, 0.5)', color: 'rgb(148, 163, 184)' }}
+                >
+                  <Expand className="w-3 h-3" />
+                  Expand
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Marquee Selection Rectangle */}
       {selectionBox && (
@@ -1222,14 +1803,14 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
 
       {/* Selection Actions Bar */}
       {selectedNodes.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 glass-surface text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-5 pointer-events-auto z-50 border border-emerald-500/20">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 glass-surface text-white px-5 py-3 rounded-none shadow-2xl flex items-center gap-5 pointer-events-auto z-50 border border-white/10">
           <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
             {selectedNodes.length} Selected
           </span>
           <button
             onClick={onMergeNodes}
             disabled={isLoading || isStreaming}
-            className="bg-emerald-500 text-black px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-400 transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="bg-orange-500 text-black px-4 py-2 rounded-none text-[10px] font-bold uppercase tracking-wider hover:bg-orange-400 transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             <Combine className="w-3.5 h-3.5" />
             Synthesize
@@ -1245,9 +1826,9 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
 
       {/* Loading indicator */}
       {isLoading && !isStreaming && (
-        <div className="absolute bottom-8 right-8 glass-surface px-4 py-2 rounded-xl flex items-center gap-3 z-50 border border-emerald-500/20">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] text-emerald-500 uppercase tracking-wider font-medium">Processing</span>
+        <div className="absolute bottom-8 right-8 glass-surface px-4 py-2 rounded-none flex items-center gap-3 z-50 border border-white/10">
+          <div className="w-2 h-2 rounded-none bg-orange-500 animate-pulse" />
+          <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: '#e6eaf0' }}>Processing</span>
         </div>
       )}
 
@@ -1368,20 +1949,28 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       <div className="absolute bottom-6 left-6 flex flex-col gap-1 pointer-events-auto z-50">
         <button
           onClick={zoomIn}
-          className="w-9 h-9 rounded-lg bg-[#0a1a0f]/90 backdrop-blur-sm border border-emerald-500/20 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-lg"
+          className="w-9 h-9 rounded-none bg-[#0a1a0f]/90 backdrop-blur-sm border border-emerald-500/20 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-lg"
           title="Zoom in"
         >
           <Plus className="w-4 h-4" />
         </button>
-        <div className="w-9 h-7 rounded-lg bg-[#0a1a0f]/90 backdrop-blur-sm border border-white/10 flex items-center justify-center">
+        <div className="w-9 h-7 rounded-none bg-[#0a1a0f]/90 backdrop-blur-sm border border-white/10 flex items-center justify-center">
           <span className="text-[9px] text-slate-400 font-mono">{Math.round(scale * 100)}%</span>
         </div>
         <button
           onClick={zoomOut}
-          className="w-9 h-9 rounded-lg bg-[#0a1a0f]/90 backdrop-blur-sm border border-emerald-500/20 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-lg"
+          className="w-9 h-9 rounded-none bg-[#0a1a0f]/90 backdrop-blur-sm border border-emerald-500/20 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-lg"
           title="Zoom out"
         >
           <Minus className="w-4 h-4" />
+        </button>
+        <div className="h-1" />
+        <button
+          onClick={fitToView}
+          className="w-9 h-9 rounded-none bg-[#0a1a0f]/90 backdrop-blur-sm border border-emerald-500/20 flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-lg"
+          title="Fit to view (Cmd+I)"
+        >
+          <Maximize className="w-4 h-4" />
         </button>
       </div>
     </div>

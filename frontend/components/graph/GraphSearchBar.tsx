@@ -9,7 +9,7 @@ interface GraphSearchBarProps {
   isLoading: boolean;
 }
 
-const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isLoading }) => {
+const GraphSearchBar = React.forwardRef<HTMLDivElement, GraphSearchBarProps>(({ documents, onQuery, isLoading }, ref) => {
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [mentionIndex, setMentionIndex] = useState(-1);
@@ -22,7 +22,7 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
     setInputValue(val);
 
     const atPos = val.lastIndexOf('@');
-    
+
     if (atPos !== -1 && (atPos === 0 || val[atPos - 1] === ' ')) {
       setShowSuggestions(true);
       setMentionIndex(atPos);
@@ -36,7 +36,7 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
   const filteredDocs = documents.filter(doc => {
     // Exclude already attached documents
     if (attachedDocs.some(d => d.id === doc.id)) return false;
-    
+
     const query = inputValue.split('@').pop()?.toLowerCase() || '';
     return doc.name.toLowerCase().includes(query);
   });
@@ -58,14 +58,14 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
     if (showSuggestions && filteredDocs.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev < filteredDocs.length - 1 ? prev + 1 : 0
         );
         return;
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setHighlightedIndex(prev => 
+        setHighlightedIndex(prev =>
           prev > 0 ? prev - 1 : filteredDocs.length - 1
         );
         return;
@@ -81,7 +81,7 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
         return;
       }
     }
-    
+
     // Normal Enter to submit query
     if (e.key === 'Enter' && !isLoading && inputValue.trim()) {
       onQuery(inputValue, attachedDocs.map(d => d.id));
@@ -106,25 +106,25 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
   };
 
   return (
-    <div className="relative group">
+    <div ref={ref} className="relative group">
       <div className={`
-        glass-surface rounded-2xl border border-emerald-500/15 p-2 transition-all duration-300 
+        glass-surface rounded-none border border-white/10 p-2 transition-all duration-300 
         shadow-[0_8px_32px_rgba(0,0,0,0.3),0_0_24px_rgba(16,185,129,0.05)]
-        ${isLoading ? 'opacity-50 pointer-events-none' : 'hover:border-emerald-500/25'}
+        ${isLoading ? 'opacity-50 pointer-events-none' : 'hover:border-white/20'}
       `}>
-        
+
         {/* Attached Documents */}
         {attachedDocs.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2 p-2">
             {attachedDocs.map(doc => (
-              <span 
-                key={doc.id} 
-                className="bg-emerald-500/15 text-emerald-400 px-2.5 py-1 rounded-full text-[9px] font-bold flex items-center gap-1.5 border border-emerald-500/25"
+              <span
+                key={doc.id}
+                className="bg-emerald-500/15 text-emerald-400 px-2.5 py-1 rounded-none text-[9px] font-bold flex items-center gap-1.5 border border-emerald-500/25"
               >
                 <FileText className="w-2.5 h-2.5" />
                 @{doc.name}
-                <button 
-                  onClick={() => removeDoc(doc.id)} 
+                <button
+                  onClick={() => removeDoc(doc.id)}
                   className="hover:text-rose-400 transition-colors ml-0.5"
                 >
                   <X className="w-2.5 h-2.5" />
@@ -139,19 +139,19 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
           <div className="p-2 text-slate-500">
             <Search className="w-4 h-4" />
           </div>
-          <input 
+          <input
             ref={inputRef}
-            type="text" 
+            type="text"
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Ask a question... type @ to reference documents"
             className="flex-1 bg-transparent py-3 text-slate-200 outline-none text-[13px] placeholder:text-slate-600 font-light"
           />
-          <button 
+          <button
             onClick={handleSubmit}
             disabled={!inputValue.trim() || isLoading}
-            className="p-2.5 bg-emerald-500 text-black rounded-xl hover:bg-emerald-400 disabled:bg-slate-700 disabled:text-slate-500 transition-all shadow-lg active:scale-95 disabled:active:scale-100"
+            className="p-2.5 bg-orange-500 text-black rounded-none hover:bg-orange-400 disabled:bg-slate-700 disabled:text-slate-500 transition-all shadow-lg active:scale-95 disabled:active:scale-100"
           >
             <ArrowRight className="w-4 h-4" />
           </button>
@@ -160,25 +160,25 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
 
       {/* Document Suggestions Dropdown */}
       {showSuggestions && filteredDocs.length > 0 && (
-        <div className="absolute top-full mt-3 left-0 w-72 glass-surface border border-emerald-500/15 rounded-xl shadow-2xl overflow-hidden z-50 animate-fade-in">
-          <div className="p-3 border-b border-white/[0.06] text-[8px] font-bold text-emerald-500/60 uppercase tracking-[0.2em]">
+        <div className="absolute top-full mt-3 left-0 w-72 glass-surface border border-white/10 rounded-none shadow-2xl overflow-hidden z-50 animate-fade-in">
+          <div className="p-3 border-b border-white/[0.06] text-[8px] font-bold text-slate-500 uppercase tracking-[0.2em]">
             Reference Documents
           </div>
           <div className="max-h-48 overflow-y-auto custom-scrollbar">
             {filteredDocs.map((doc, index) => (
-              <button 
+              <button
                 key={doc.id}
                 onClick={() => handleSelectDoc(doc)}
                 className={`w-full text-left px-4 py-3 transition-colors border-b border-white/[0.03] last:border-0 flex items-center justify-between group/item
                   ${index === highlightedIndex ? 'bg-emerald-500/10' : 'hover:bg-white/[0.03]'}`}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all
-                    ${index === highlightedIndex ? 'bg-emerald-500 text-black' : 'bg-emerald-500/10 text-emerald-500/60 group-hover/item:bg-emerald-500 group-hover/item:text-black'}`}>
+                  <div className={`w-6 h-6 rounded-none flex items-center justify-center transition-all
+                    ${index === highlightedIndex ? 'bg-orange-500 text-black' : 'bg-white/5 text-slate-500'}`}>
                     <FileText className="w-3 h-3" />
                   </div>
                   <div className="flex flex-col">
-                    <span className={`font-medium text-[11px] truncate max-w-[160px] ${index === highlightedIndex ? 'text-emerald-300' : 'text-slate-300'}`}>
+                    <span className={`font-medium text-[11px] truncate max-w-[160px] ${index === highlightedIndex ? 'text-white' : 'text-slate-300'}`}>
                       @{doc.name}
                     </span>
                     <span className="text-[8px] text-slate-600 font-bold uppercase">
@@ -186,7 +186,7 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
                     </span>
                   </div>
                 </div>
-                <Check className={`w-3.5 h-3.5 text-emerald-500 transition-all ${index === highlightedIndex ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} />
+                <Check className={`w-3.5 h-3.5 text-orange-500 transition-all ${index === highlightedIndex ? 'opacity-100' : 'opacity-0 group-hover/item:opacity-100'}`} />
               </button>
             ))}
           </div>
@@ -194,7 +194,9 @@ const GraphSearchBar: React.FC<GraphSearchBarProps> = ({ documents, onQuery, isL
       )}
     </div>
   );
-};
+});
+
+GraphSearchBar.displayName = 'GraphSearchBar';
 
 export default GraphSearchBar;
 

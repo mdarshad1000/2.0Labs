@@ -55,13 +55,13 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
             }}
         >
             {/* Connector Pins - Moved outside to specific overflow clipping */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-full flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-full flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
-            <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-full flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
-            <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-full flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-none flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-none flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
+            <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-none flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
+            <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-[#141b19] border border-white/10 rounded-none flex items-center justify-center text-[10px] z-10 shadow-md transform transition-transform hover:scale-110" style={{ color: 'var(--node-accent)', borderColor: 'var(--node-border)' }}>+</div>
 
             <div
-                className="rounded-2xl overflow-hidden flex flex-col h-full backdrop-blur-xl transition-all duration-700 ease-out"
+                className="rounded-none overflow-hidden flex flex-col h-full backdrop-blur-xl transition-all duration-700 ease-out"
                 style={{
                     background: 'var(--node-bg)',
                     border: '1px solid var(--node-border)',
@@ -91,7 +91,7 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
                         {node.content.map((point, i) => (
                             <li key={i} className="flex items-start gap-2">
                                 <div
-                                    className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 opacity-60"
+                                    className="w-1.5 h-1.5 rounded-none mt-1.5 shrink-0 opacity-60"
                                     style={{ background: 'var(--node-accent)' }}
                                 />
                                 <span
@@ -108,7 +108,7 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
                     {!expansionActive && (!hasExpansion || scrollProgress < node.expansion!.triggerAt) && (
                         <div className="flex justify-end mt-auto pt-2">
                             <button
-                                className="px-3 py-1.5 rounded-lg text-[9px] font-bold uppercase tracking-[0.12em] transition-all flex items-center gap-1.5 hover:brightness-125"
+                                className="px-3 py-1.5 rounded-none text-[9px] font-bold uppercase tracking-[0.12em] transition-all flex items-center gap-1.5 hover:brightness-125"
                                 style={{
                                     background: 'var(--node-header)',
                                     color: 'var(--node-text)' // Use text color for contrast or black if header is light?
@@ -177,7 +177,7 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
                                     className="space-y-2 pt-1"
                                 >
                                     {node.expansion!.options.map((opt, i) => (
-                                        <div key={i} className="p-3 rounded-xl transition-all cursor-pointer group hover:bg-white/5 border border-transparent hover:border-white/10"
+                                        <div key={i} className="p-3 rounded-none transition-all cursor-pointer group hover:bg-white/5 border border-transparent hover:border-white/10"
                                             style={{ background: 'var(--node-bg)' }}>
                                             <p className="text-[11px] font-medium leading-tight group-hover:text-white" style={{ color: 'var(--node-text)' }}>
                                                 {opt}
@@ -189,11 +189,11 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
                                         <input
                                             type="text"
                                             placeholder="Or type custom query..."
-                                            className="w-full bg-black/30 border rounded-xl px-4 py-2.5 text-[11px] text-slate-400 focus:outline-none"
+                                            className="w-full bg-black/30 border rounded-none px-4 py-2.5 text-[11px] text-slate-400 focus:outline-none"
                                             style={{ borderColor: 'var(--node-border)' }}
                                             readOnly
                                         />
-                                        <div className="absolute right-2 top-1 bottom-1 w-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--node-bg)', color: 'var(--node-accent)' }}>
+                                        <div className="absolute right-2 top-1 bottom-1 w-8 rounded-none flex items-center justify-center" style={{ background: 'var(--node-bg)', color: 'var(--node-accent)' }}>
                                             <ArrowRight className="w-3.5 h-3.5" />
                                         </div>
                                     </div>
@@ -210,7 +210,7 @@ const Node: React.FC<NodeProps> = ({ node, scrollProgress }) => {
                                     transition={{ duration: 0.5 }}
                                     className="mt-2 text-center"
                                 >
-                                    <div className="bg-[#050a08]/80 border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center gap-2.5 shadow-inner">
+                                    <div className="bg-[#050a08]/80 border border-white/5 rounded-none p-4 flex flex-col items-center justify-center gap-2.5 shadow-inner">
                                         <div className="loading-waveform scale-90">
                                             <div className="waveform-bar"></div>
                                             <div className="waveform-bar"></div>

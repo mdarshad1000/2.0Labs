@@ -331,7 +331,7 @@ Generate analytical questions for this matrix. Return valid JSON only."""
             if hasattr(service, 'client'):
                 # OpenAI
                 response = await service.client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4o-mini-mini",
                     messages=[
                         {"role": "system", "content": "You generate analytical questions. Return valid JSON only."},
                         {"role": "user", "content": prompt}
@@ -637,7 +637,7 @@ Return valid JSON:"""
             if hasattr(service, 'client'):
                 # OpenAI
                 response = await service.client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4o-mini-mini",
                     messages=[
                         {"role": "system", "content": "You generate chart data. Return ONLY valid JSON with numeric values."},
                         {"role": "user", "content": prompt}

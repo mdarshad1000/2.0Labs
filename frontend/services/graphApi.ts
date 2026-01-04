@@ -8,7 +8,7 @@ type NodeColor = 'yellow' | 'red' | 'blue' | 'green' | 'slate';
 
 interface NodeData {
   title: string;
-  content: string[];
+  content: string;
   color: NodeColor;
 }
 
@@ -78,7 +78,7 @@ export const expandNode = async (
     body: JSON.stringify({
       node: {
         title: node.title,
-        content: node.content
+        content: Array.isArray(node.content) ? (node.content as any).join('\n') : node.content
       },
       documents: docs.map(d => ({
         name: d.name,
@@ -108,7 +108,7 @@ export const mergeNodes = async (
     body: JSON.stringify({
       nodes: nodes.map(n => ({
         title: n.title,
-        content: n.content
+        content: Array.isArray(n.content) ? (n.content as any).join('\n') : n.content
       }))
     })
   });
@@ -136,7 +136,7 @@ export const createNode = async (
       prompt,
       parent_node: parentNode ? {
         title: parentNode.title,
-        content: parentNode.content
+        content: Array.isArray(parentNode.content) ? (parentNode.content as any).join('\n') : parentNode.content
       } : null,
       documents: docs.map(d => ({
         name: d.name,
@@ -251,7 +251,7 @@ export const suggestExpand = async (
     body: JSON.stringify({
       node: {
         title: node.title,
-        content: node.content
+        content: Array.isArray(node.content) ? (node.content as any).join('\n') : node.content
       },
       documents: docs.map(d => ({
         name: d.name,
@@ -279,4 +279,3 @@ export const graphApi = {
 };
 
 export default graphApi;
-

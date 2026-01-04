@@ -1,9 +1,9 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { 
-  Plus, 
-  FileText, 
-  Activity, 
+import {
+  Plus,
+  FileText,
+  Activity,
   Trash2,
   Zap,
   ChevronLeft,
@@ -34,10 +34,10 @@ import 'react-pdf/dist/Page/TextLayer.css';
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-import { 
-  Document as DocType, 
-  Metric, 
-  Template, 
+import {
+  Document as DocType,
+  Metric,
+  Template,
   ActivityLog,
   CellData
 } from './types';
@@ -176,30 +176,27 @@ const CellDetailOverlay: React.FC<CellOverlayProps> = ({
       }}
     >
       {/* Connector line visual hint */}
-      <div 
-        className={`absolute w-2.5 h-2.5 bg-emerald-500/10 border-emerald-500/25 rotate-45 ${
-          position.placement === 'right' ? '-left-1 top-5 border-l border-b' :
+      <div
+        className={`absolute w-2.5 h-2.5 bg-emerald-500/10 border-emerald-500/25 rotate-45 ${position.placement === 'right' ? '-left-1 top-5 border-l border-b' :
           position.placement === 'left' ? '-right-1 top-5 border-r border-t' :
-          position.placement === 'below' ? 'left-8 -top-1 border-t border-l' :
-          'left-8 -bottom-1 border-b border-r'
-        }`}
+            position.placement === 'below' ? 'left-8 -top-1 border-t border-l' :
+              'left-8 -bottom-1 border-b border-r'
+          }`}
       />
 
       {/* Header */}
       <div className="flex items-center justify-between px-2.5 py-2 border-b border-white/[0.05] bg-emerald-500/[0.02]">
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${
-            cell.confidence === 'High' ? 'bg-emerald-500' : 
+          <div className={`w-2 h-2 rounded-none shrink-0 ${cell.confidence === 'High' ? 'bg-emerald-500' :
             cell.confidence === 'Medium' ? 'bg-amber-500' : 'bg-orange-500'
-          }`} />
+            }`} />
           <span className="text-[9px] font-semibold text-white/60 uppercase tracking-[0.1em] truncate max-w-[180px]">
             {metric.label}
           </span>
-          <span className={`text-[8px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded-full ${
-            cell.confidence === 'High' ? 'text-emerald-400/70 bg-emerald-500/12' : 
-            cell.confidence === 'Medium' ? 'text-amber-400/70 bg-amber-500/12' : 
-            'text-orange-400/70 bg-orange-500/12'
-          }`}>
+          <span className={`text-[8px] uppercase tracking-[0.06em] px-1.5 py-0.5 rounded-none ${cell.confidence === 'High' ? 'text-emerald-400/70 bg-emerald-500/12' :
+            cell.confidence === 'Medium' ? 'text-amber-400/70 bg-amber-500/12' :
+              'text-orange-400/70 bg-orange-500/12'
+            }`}>
             {cell.confidence}
           </span>
         </div>
@@ -291,7 +288,7 @@ const AnalyticalQuestionsGlyph: React.FC<AnalyticalQuestionsGlyphProps> = ({
   // Click outside handler
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
       if (
@@ -301,12 +298,12 @@ const AnalyticalQuestionsGlyph: React.FC<AnalyticalQuestionsGlyphProps> = ({
         onClose();
       }
     };
-    
+
     // Small delay to prevent immediate close
     const timer = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
     }, 10);
-    
+
     return () => {
       clearTimeout(timer);
       document.removeEventListener('mousedown', handleClickOutside);
@@ -328,10 +325,9 @@ const AnalyticalQuestionsGlyph: React.FC<AnalyticalQuestionsGlyphProps> = ({
         title="Analyze entities"
         style={{ animationDuration: '200ms' }}
       >
-        <BarChart2 
-          className={`w-3 h-3 transition-colors duration-150 ${
-            isOpen ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-400'
-          }`} 
+        <BarChart2
+          className={`w-3 h-3 transition-colors duration-150 ${isOpen ? 'text-emerald-400' : 'text-slate-500 hover:text-slate-400'
+            }`}
         />
       </button>
 
@@ -351,7 +347,7 @@ const AnalyticalQuestionsGlyph: React.FC<AnalyticalQuestionsGlyphProps> = ({
           <div className="px-3 py-2 border-b border-white/[0.05]">
             <p className="text-[9px] text-white/40 uppercase tracking-wider">What would you like to explore?</p>
           </div>
-          
+
           {/* Content */}
           <div className="max-h-60 overflow-y-auto">
             {isLoading ? (
@@ -409,7 +405,7 @@ const UserMenu: React.FC = () => {
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
       if (
@@ -419,11 +415,11 @@ const UserMenu: React.FC = () => {
         setIsOpen(false);
       }
     };
-    
+
     const timeoutId = setTimeout(() => {
       document.addEventListener('mousedown', handleClickOutside);
     }, 10);
-    
+
     return () => {
       clearTimeout(timeoutId);
       document.removeEventListener('mousedown', handleClickOutside);
@@ -443,9 +439,9 @@ const UserMenu: React.FC = () => {
         className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-all cursor-pointer"
       >
         {user.picture ? (
-          <img 
-            src={user.picture} 
-            alt={user.name || 'User'} 
+          <img
+            src={user.picture}
+            alt={user.name || 'User'}
             className="w-7 h-7 rounded-full border border-white/10"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
@@ -457,9 +453,9 @@ const UserMenu: React.FC = () => {
           <User className="w-3.5 h-3.5 text-emerald-400" />
         </div>
       </button>
-      
+
       {isOpen && createPortal(
-        <div 
+        <div
           ref={dropdownRef}
           className="fixed w-56 bg-[#020804]/98 backdrop-blur-xl border border-white/[0.06] rounded-lg shadow-xl overflow-hidden animate-fade-in"
           style={{
@@ -495,10 +491,10 @@ const UserMenu: React.FC = () => {
 // Main App Content (separated to use auth context)
 const AppContent: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
-  
+
   // Parse route info from URL
   type ViewType = 'hero' | 'view-selector' | 'templates' | 'template' | 'graph' | 'login' | 'auth-callback';
-  
+
   const getRouteFromPath = (): { view: ViewType; templateId?: string } => {
     const path = window.location.pathname;
     if (path === '/login') return { view: 'login' };
@@ -511,12 +507,12 @@ const AppContent: React.FC = () => {
     if (templateMatch) return { view: 'template', templateId: templateMatch[1] };
     return { view: 'hero' };
   };
-  
+
   const [view, setView] = useState<ViewType>(() => getRouteFromPath().view);
   const [currentTemplateId, setCurrentTemplateId] = useState<string | undefined>(() => getRouteFromPath().templateId);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
-  
+
   // Fetch templates on mount and when user changes
   useEffect(() => {
     const loadTemplates = async () => {
@@ -550,11 +546,11 @@ const AppContent: React.FC = () => {
     };
     loadTemplates();
   }, [user]);
-  
+
   // Protect routes on initial load and auth state changes
   useEffect(() => {
     const protectedViews: ViewType[] = ['templates', 'template', 'graph'];
-    
+
     // If on a protected route and not authenticated (and not loading), redirect to login
     if (protectedViews.includes(view) && !user && !authLoading) {
       localStorage.setItem('returnTo', window.location.pathname);
@@ -562,7 +558,7 @@ const AppContent: React.FC = () => {
       setView('login');
     }
   }, [view, user, authLoading]);
-  
+
   // Handle URL changes (browser back/forward)
   useEffect(() => {
     const handlePopState = () => {
@@ -592,10 +588,10 @@ const AppContent: React.FC = () => {
       };
       path = pathMap[newView];
     }
-    
+
     // Protected routes - require authentication
     const protectedViews: ViewType[] = ['templates', 'template', 'graph'];
-    
+
     if (protectedViews.includes(newView) && !user) {
       // Store intended destination and redirect to login
       localStorage.setItem('returnTo', path);
@@ -603,7 +599,7 @@ const AppContent: React.FC = () => {
       setView('login');
       return;
     }
-    
+
     const currentPath = window.location.pathname;
     if (path !== currentPath) {
       window.history.pushState({}, '', path);
@@ -611,7 +607,7 @@ const AppContent: React.FC = () => {
       setCurrentTemplateId(templateId);
     }
   }, [user]);
-  
+
   const [documents, setDocuments] = useState<DocType[]>([]);
   const [activeTemplate, setActiveTemplate] = useState<Template | null>(null);
   const [cells, setCells] = useState<CellMap>({});
@@ -622,7 +618,7 @@ const AppContent: React.FC = () => {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [highlightedCell, setHighlightedCell] = useState<string | null>(null);
-  
+
   // Graph view state
   const [graphProject, setGraphProject] = useState<GraphProject>({
     id: 'default-graph',
@@ -634,7 +630,7 @@ const AppContent: React.FC = () => {
   });
   const [isGraphUploading, setIsGraphUploading] = useState(false);
   const [isGraphSidebarExpanded, setIsGraphSidebarExpanded] = useState(true);
-  
+
   // Cell overlay state
   const [anchorCellId, setAnchorCellId] = useState<string | null>(null);
   const [anchorCellRect, setAnchorCellRect] = useState<DOMRect | null>(null);
@@ -653,7 +649,7 @@ const AppContent: React.FC = () => {
   const questionsDropdownRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  
+
   // Create Template modal state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createTemplateForm, setCreateTemplateForm] = useState({
@@ -680,12 +676,12 @@ const AppContent: React.FC = () => {
     if (!anchorCellId || !activeTemplate) return null;
     const cell = cells[anchorCellId];
     if (!cell) return null;
-    
+
     const [docId, ...metricParts] = anchorCellId.split('-');
     const metricId = metricParts.join('-');
     const doc = documents.find(d => d.id === docId);
     const metric = activeTemplate.metrics.find(m => m.id === metricId);
-    
+
     if (!doc || !metric) return null;
     return { cell, doc, metric };
   }, [anchorCellId, cells, documents, activeTemplate]);
@@ -701,13 +697,13 @@ const AppContent: React.FC = () => {
   // Click outside handler for questions dropdown
   useEffect(() => {
     if (!isQuestionsDropdownOpen) return;
-    
+
     const handleClickOutside = (e: MouseEvent) => {
       if (questionsDropdownRef.current && !questionsDropdownRef.current.contains(e.target as Node)) {
         setIsQuestionsDropdownOpen(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isQuestionsDropdownOpen]);
@@ -716,13 +712,13 @@ const AppContent: React.FC = () => {
   // This is the proper lifecycle boundary for the lens
   const prevDocsRef = useRef<string>('');
   const prevMetricsRef = useRef<string>('');
-  
+
   useEffect(() => {
     if (!activeTemplate) return;
-    
+
     const currentDocsKey = documents.map(d => d.id).join(',');
     const currentMetricsKey = activeTemplate.metrics.map(m => m.id).join(',');
-    
+
     // Skip on initial mount
     if (prevDocsRef.current === '' && prevMetricsRef.current === '') {
       prevDocsRef.current = currentDocsKey;
@@ -747,13 +743,13 @@ const AppContent: React.FC = () => {
   // Fetch analytical questions when dropdown opens
   const fetchAnalyticalQuestions = async () => {
     if (isLoadingQuestions || documents.length === 0) return;
-    
+
     setIsLoadingQuestions(true);
-      try {
-        const matrixContext = getMatrixContext();
+    try {
+      const matrixContext = getMatrixContext();
       const response = await api.getAnalyticalQuestions(matrixContext);
       setAnalyticalQuestions(response.questions);
-      } catch (error) {
+    } catch (error) {
       console.error('Failed to fetch analytical questions:', error);
       setAnalyticalQuestions([]);
     } finally {
@@ -768,10 +764,10 @@ const AppContent: React.FC = () => {
     setIsLoadingAnswer(true);
     setVisualization(null);
     setAnswerSummary('');
-    
+
     // Open chat panel to show the visualization
     setIsChatOpen(true);
-    
+
     try {
       const matrixContext = getMatrixContext();
       const response = await api.answerQuestion(question, matrixContext);
@@ -802,7 +798,7 @@ const AppContent: React.FC = () => {
       sources?: string[];
       error?: string;
     }> = {};
-    
+
     for (const k of Object.keys(cells)) {
       const v = cells[k];
       cellsForContext[k] = {
@@ -814,7 +810,7 @@ const AppContent: React.FC = () => {
         error: v.error
       };
     }
-    
+
     return {
       documents: documents.map(d => ({
         id: d.id,
@@ -839,16 +835,16 @@ const AppContent: React.FC = () => {
     console.log('handleCellHighlight called:', { docId, metricId, cellId });
     console.log('Available documents:', documents.map(d => d.id));
     console.log('Available cells:', Object.keys(cells));
-    
+
     setHighlightedCell(cellId);
-    
+
     // Scroll to the cell if possible
     const cellElement = document.querySelector(`[data-cell-id="${cellId}"]`);
     console.log('Cell element found:', !!cellElement);
     if (cellElement) {
       cellElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-    
+
     // Remove highlight after animation
     setTimeout(() => setHighlightedCell(null), 2000);
   }, [documents, cells]);
@@ -857,7 +853,7 @@ const AppContent: React.FC = () => {
   const handleDocumentOpen = useCallback((docId: string, section?: string) => {
     console.log('handleDocumentOpen called:', { docId, section });
     console.log('Available documents:', documents.map(d => ({ id: d.id, name: d.name })));
-    
+
     const doc = documents.find(d => d.id === docId);
     console.log('Found document:', !!doc, doc?.name);
     if (doc) {
@@ -878,11 +874,11 @@ const AppContent: React.FC = () => {
   // Handle template creation
   const handleCreateTemplate = async () => {
     if (!createTemplateForm.name.trim()) return;
-    
+
     setIsCreatingTemplate(true);
     try {
       let createdTemplate;
-      
+
       if (createTemplateForm.forkFromId) {
         // Fork an existing template
         createdTemplate = await api.forkTemplate(createTemplateForm.forkFromId, {
@@ -901,7 +897,7 @@ const AppContent: React.FC = () => {
           })),
         });
       }
-      
+
       // Add to templates list
       const newTemplate: Template = {
         id: createdTemplate.id,
@@ -920,7 +916,7 @@ const AppContent: React.FC = () => {
         created_at: createdTemplate.created_at,
         updated_at: createdTemplate.updated_at,
       };
-      
+
       setTemplates(prev => [newTemplate, ...prev]);
       setIsCreateModalOpen(false);
       setCreateTemplateForm({
@@ -930,7 +926,7 @@ const AppContent: React.FC = () => {
         metrics: [],
         forkFromId: undefined,
       });
-      
+
       // Navigate to the new template
       selectTemplate(newTemplate);
     } catch (error) {
@@ -940,7 +936,7 @@ const AppContent: React.FC = () => {
       setIsCreatingTemplate(false);
     }
   };
-  
+
   // Open create modal with fork option
   const openCreateModal = (forkFromId?: string) => {
     if (forkFromId) {
@@ -969,7 +965,7 @@ const AppContent: React.FC = () => {
     }
     setIsCreateModalOpen(true);
   };
-  
+
   // Add metric to form
   const addMetricToForm = () => {
     setCreateTemplateForm(prev => ({
@@ -977,7 +973,7 @@ const AppContent: React.FC = () => {
       metrics: [...prev.metrics, { id: `metric-${Date.now()}`, label: '', description: '' }],
     }));
   };
-  
+
   // Remove metric from form
   const removeMetricFromForm = (index: number) => {
     setCreateTemplateForm(prev => ({
@@ -985,7 +981,7 @@ const AppContent: React.FC = () => {
       metrics: prev.metrics.filter((_, i) => i !== index),
     }));
   };
-  
+
   // Update metric in form
   const updateMetricInForm = (index: number, field: 'label' | 'description', value: string) => {
     setCreateTemplateForm(prev => ({
@@ -996,7 +992,7 @@ const AppContent: React.FC = () => {
 
   // Function to go back to hero landing
   const goToHero = () => navigateTo('hero');
-  
+
   // Load template when currentTemplateId changes (e.g., on page refresh or direct URL access)
   useEffect(() => {
     if (view === 'template' && currentTemplateId && !activeTemplate) {
@@ -1065,30 +1061,30 @@ const AppContent: React.FC = () => {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const blobUrl = URL.createObjectURL(file);
-      
+
       try {
         // Upload to backend for PDF parsing
         addLog(`Processing: ${file.name}...`, 'info');
         const uploaded = await api.uploadDocument(file);
-        
-      newDocs.push({
+
+        newDocs.push({
           id: uploaded.id,
           name: uploaded.name,
           type: uploaded.type,
           size: uploaded.size,
           content: uploaded.content,
           blobUrl
-      });
-      addLog(`Mined: ${file.name}`, 'success');
+        });
+        addLog(`Mined: ${file.name}`, 'success');
       } catch (error) {
         console.error(`Failed to upload ${file.name}:`, error);
         addLog(`Failed to process: ${file.name}`, 'error');
         URL.revokeObjectURL(blobUrl);
       }
     }
-    
+
     if (newDocs.length > 0) {
-    setDocuments(prev => [...prev, ...newDocs]);
+      setDocuments(prev => [...prev, ...newDocs]);
     }
   };
 
@@ -1117,9 +1113,9 @@ const AppContent: React.FC = () => {
       const result = await api.extract(doc.content, metric.label);
       setCells(prev => ({
         ...prev,
-        [cellId]: { 
-          value: result.value, 
-          isLoading: false, 
+        [cellId]: {
+          value: result.value,
+          isLoading: false,
           confidence: result.confidence,
           reasoning: result.reasoning,
           sources: result.sources
@@ -1136,7 +1132,7 @@ const AppContent: React.FC = () => {
     if (isProcessing || documents.length === 0 || !activeTemplate || activeTemplate.metrics.length === 0) return;
     setIsProcessing(true);
     addLog("Batch hydration active...", "process");
-    const tasks = documents.flatMap(doc => 
+    const tasks = documents.flatMap(doc =>
       activeTemplate.metrics.map(metric => computeCell(doc.id, metric))
     );
     Promise.all(tasks).finally(() => {
@@ -1151,13 +1147,13 @@ const AppContent: React.FC = () => {
       // Check for Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux)
       const isModifierPressed = e.metaKey || e.ctrlKey;
       const isEnter = e.key === 'Enter';
-      
+
       // Don't trigger if user is typing in an input, textarea, or contenteditable
       const target = e.target as HTMLElement;
-      const isInputField = target.tagName === 'INPUT' || 
-                          target.tagName === 'TEXTAREA' || 
-                          target.isContentEditable;
-      
+      const isInputField = target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable;
+
       if (isModifierPressed && isEnter && !isInputField) {
         e.preventDefault();
         // Only trigger if button is enabled
@@ -1166,7 +1162,7 @@ const AppContent: React.FC = () => {
         }
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isProcessing, documents.length, activeTemplate, computeAll]);
@@ -1174,13 +1170,13 @@ const AppContent: React.FC = () => {
   // Login page
   if (view === 'login') {
     return (
-      <LoginPage 
+      <LoginPage
         onLoginSuccess={() => {
           // Redirect to saved returnTo path or home
           const returnTo = localStorage.getItem('returnTo') || '/';
           localStorage.removeItem('returnTo');
           window.location.href = returnTo;
-        }} 
+        }}
       />
     );
   }
@@ -1188,7 +1184,7 @@ const AppContent: React.FC = () => {
   // Auth callback
   if (view === 'auth-callback') {
     return (
-      <AuthCallback 
+      <AuthCallback
         onSuccess={() => {
           window.location.href = '/';
         }}
@@ -1207,8 +1203,8 @@ const AppContent: React.FC = () => {
   // View Selector - Choose between Matrix and Graph views
   if (view === 'view-selector') {
     return (
-      <ViewSelector 
-        onSelectMatrix={() => navigateTo('templates')} 
+      <ViewSelector
+        onSelectMatrix={() => navigateTo('templates')}
         onSelectGraph={() => navigateTo('graph')}
         onBack={() => navigateTo('hero')}
       />
@@ -1221,7 +1217,7 @@ const AppContent: React.FC = () => {
       const files = e.target.files;
       if (!files) return;
       setIsGraphUploading(true);
-      
+
       const newDocs: DocType[] = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
@@ -1238,7 +1234,7 @@ const AppContent: React.FC = () => {
           console.error('Failed to read file', file.name, err);
         }
       }
-      
+
       if (newDocs.length > 0) {
         setGraphProject(prev => ({
           ...prev,
@@ -1253,7 +1249,7 @@ const AppContent: React.FC = () => {
         {/* Graph Header */}
         <header className="fixed top-0 left-0 right-0 h-14 glass-surface border-b border-emerald-500/10 flex items-center justify-between px-6 z-50">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => navigateTo('view-selector')}
               className="text-slate-400 hover:text-white transition-colors"
             >
@@ -1268,7 +1264,7 @@ const AppContent: React.FC = () => {
           </div>
           <div className="flex items-center gap-4">
             {/* Reservoir Indicator - opens sidebar when clicked */}
-            <ReservoirIndicator 
+            <ReservoirIndicator
               documentCount={graphProject.documents.length}
               onClick={() => setIsGraphSidebarExpanded(true)}
             />
@@ -1278,28 +1274,25 @@ const AppContent: React.FC = () => {
 
         <div className="flex-1 flex pt-14">
           {/* Sidebar */}
-          <div className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${
-            isGraphSidebarExpanded ? 'w-64' : 'w-0'
-          }`}>
-            <div className={`h-full p-3 transition-opacity duration-300 ${
-              isGraphSidebarExpanded ? 'opacity-100' : 'opacity-0'
+          <div className={`transition-all duration-300 ease-in-out shrink-0 overflow-hidden ${isGraphSidebarExpanded ? 'w-64' : 'w-0'
             }`}>
-              <GraphSidebar 
+            <div className={`h-full p-3 transition-opacity duration-300 ${isGraphSidebarExpanded ? 'opacity-100' : 'opacity-0'
+              }`}>
+              <GraphSidebar
                 project={graphProject}
                 onUpload={handleGraphFileUpload}
                 isUploading={isGraphUploading}
               />
             </div>
           </div>
-          
+
           {/* Sidebar Toggle Button */}
           <button
             onClick={() => setIsGraphSidebarExpanded(!isGraphSidebarExpanded)}
-            className={`absolute top-20 z-50 p-2 glass-surface border border-emerald-500/20 rounded-lg transition-all duration-300 hover:bg-emerald-500/10 ${
-              isGraphSidebarExpanded 
-                ? 'left-[256px] rounded-l-none' // Right edge of sidebar (256px = 64 * 4)
-                : 'left-0 rounded-r-none' // Left edge when collapsed
-            }`}
+            className={`absolute top-20 z-50 p-2 glass-surface border border-emerald-500/20 rounded-lg transition-all duration-300 hover:bg-emerald-500/10 ${isGraphSidebarExpanded
+              ? 'left-[256px] rounded-l-none' // Right edge of sidebar (256px = 64 * 4)
+              : 'left-0 rounded-r-none' // Left edge when collapsed
+              }`}
             title={isGraphSidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
           >
             {isGraphSidebarExpanded ? (
@@ -1308,10 +1301,10 @@ const AppContent: React.FC = () => {
               <PanelLeft className="w-4 h-4 text-slate-400 hover:text-emerald-400" />
             )}
           </button>
-          
+
           {/* Canvas */}
           <main className="flex-1 relative">
-            <GraphCanvas 
+            <GraphCanvas
               project={graphProject}
               onUpdateProject={(updates) => setGraphProject(prev => ({ ...prev, ...updates }))}
             />
@@ -1324,18 +1317,18 @@ const AppContent: React.FC = () => {
   // Templates - Card selection view
   if (view === 'templates') {
     const driftClasses = ['idle-drift-1', 'idle-drift-2', 'idle-drift-3', 'idle-drift-4'];
-    
+
     // Split templates into system and user templates
     const systemTemplates = templates.filter(t => t.is_system);
     const userTemplates = templates.filter(t => !t.is_system);
-    
+
     return (
       <div className="landing-container h-screen w-full flex flex-col items-center justify-center bg-[#030a06] text-slate-300 p-6 font-['Epilogue'] relative overflow-hidden text-[12px]">
         {/* Grain overlay - independent motion */}
         <div className="landing-grain" aria-hidden="true" />
-        
+
         {/* Ambient background gradient */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none opacity-0"
           style={{
             background: 'radial-gradient(ellipse 80% 50% at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 60%)',
@@ -1343,7 +1336,7 @@ const AppContent: React.FC = () => {
           }}
           aria-hidden="true"
         />
-        
+
         {/* Logo & Title Section */}
         <div className="flex flex-col items-center gap-1.5 mb-10 relative z-10">
           <div className="landing-logo w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.2)] mb-4">
@@ -1368,38 +1361,38 @@ const AppContent: React.FC = () => {
         ) : (
           <>
             {/* System Templates Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl w-full px-6 relative z-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl w-full px-6 relative z-10">
               {systemTemplates.map((t, idx) => (
-            <button
-              key={t.id}
-              onClick={() => selectTemplate(t)}
-              className={`landing-card ${driftClasses[idx % 4]} glass-surface p-6 rounded-xl text-left flex flex-col min-h-[220px]`}
-              style={{ '--card-delay': `${idx * 80}ms` } as React.CSSProperties}
-            >
-              <div className="landing-card-icon w-7 h-7 rounded-lg border border-white/10 flex items-center justify-center mb-4 transition-all duration-500 shrink-0">
-                    {t.metrics.length === 0 
-                  ? <Plus className="w-3.5 h-3.5 text-emerald-400" /> 
-                  : <Layers className="w-3.5 h-3.5 text-slate-400" />
-                }
-              </div>
-              <h3 className="landing-card-title text-white text-[17px] font-light tracking-tight mb-1 leading-snug">
-                {t.name}
-              </h3>
-              {t.subtitle && (
-                <p className="landing-card-title text-[9px] uppercase tracking-[0.15em] text-emerald-500/60 font-semibold mb-2">
-                  {t.subtitle}
-                </p>
-              )}
-              <p className="landing-card-desc text-[12px] leading-relaxed text-slate-400 mb-4 font-light flex-1">
-                {t.description}
-              </p>
-              <div className="landing-card-action mt-auto pt-2 flex items-center gap-1.5 text-emerald-500 text-[10px] uppercase tracking-[0.2em] font-semibold transition-opacity duration-500">
-                Enter <ArrowRight className="w-3 h-3" />
-              </div>
-            </button>
-          ))}
-        </div>
-            
+                <button
+                  key={t.id}
+                  onClick={() => selectTemplate(t)}
+                  className={`landing-card ${driftClasses[idx % 4]} glass-surface p-6 rounded-xl text-left flex flex-col min-h-[220px]`}
+                  style={{ '--card-delay': `${idx * 80}ms` } as React.CSSProperties}
+                >
+                  <div className="landing-card-icon w-7 h-7 rounded-lg border border-white/10 flex items-center justify-center mb-4 transition-all duration-500 shrink-0">
+                    {t.metrics.length === 0
+                      ? <Plus className="w-3.5 h-3.5 text-emerald-400" />
+                      : <Layers className="w-3.5 h-3.5 text-slate-400" />
+                    }
+                  </div>
+                  <h3 className="landing-card-title text-white text-[17px] font-light tracking-tight mb-1 leading-snug">
+                    {t.name}
+                  </h3>
+                  {t.subtitle && (
+                    <p className="landing-card-title text-[9px] uppercase tracking-[0.15em] text-emerald-500/60 font-semibold mb-2">
+                      {t.subtitle}
+                    </p>
+                  )}
+                  <p className="landing-card-desc text-[12px] leading-relaxed text-slate-400 mb-4 font-light flex-1">
+                    {t.description}
+                  </p>
+                  <div className="landing-card-action mt-auto pt-2 flex items-center gap-1.5 text-emerald-500 text-[10px] uppercase tracking-[0.2em] font-semibold transition-opacity duration-500">
+                    Enter <ArrowRight className="w-3 h-3" />
+                  </div>
+                </button>
+              ))}
+            </div>
+
             {/* User Templates Section */}
             <div className="w-full max-w-6xl px-6 mt-10 relative z-10">
               <h2 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-semibold mb-4">
@@ -1428,7 +1421,7 @@ const AppContent: React.FC = () => {
                     Create <Plus className="w-3 h-3" />
                   </div>
                 </button>
-                
+
                 {/* User's existing templates */}
                 {userTemplates.map((t, idx) => (
                   <button
@@ -1460,11 +1453,11 @@ const AppContent: React.FC = () => {
             </div>
           </>
         )}
-        
+
         {/* Create Template Modal */}
         {isCreateModalOpen && (
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-            <div className="glass-surface rounded-2xl w-full max-w-xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="glass-surface rounded-none w-full max-w-xl max-h-[80vh] overflow-hidden flex flex-col">
               {/* Modal Header */}
               <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
                 <div>
@@ -1472,19 +1465,19 @@ const AppContent: React.FC = () => {
                     {createTemplateForm.forkFromId ? 'Fork Template' : 'Create Template'}
                   </h2>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    {createTemplateForm.forkFromId 
+                    {createTemplateForm.forkFromId
                       ? 'Create a copy of an existing template with your modifications'
                       : 'Build a custom analysis template with your own metrics'}
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsCreateModalOpen(false)}
                   className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              
+
               {/* Modal Content */}
               <div className="p-6 overflow-y-auto flex-1 space-y-5">
                 {/* Template Name */}
@@ -1500,7 +1493,7 @@ const AppContent: React.FC = () => {
                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20"
                   />
                 </div>
-                
+
                 {/* Subtitle */}
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-semibold block mb-2">
@@ -1514,7 +1507,7 @@ const AppContent: React.FC = () => {
                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20"
                   />
                 </div>
-                
+
                 {/* Description */}
                 <div>
                   <label className="text-[10px] uppercase tracking-[0.15em] text-slate-500 font-semibold block mb-2">
@@ -1528,7 +1521,7 @@ const AppContent: React.FC = () => {
                     className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/20 resize-none"
                   />
                 </div>
-                
+
                 {/* Metrics */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
@@ -1542,7 +1535,7 @@ const AppContent: React.FC = () => {
                       <Plus className="w-3 h-3" /> Add Metric
                     </button>
                   </div>
-                  
+
                   {createTemplateForm.metrics.length === 0 ? (
                     <p className="text-[11px] text-slate-500 italic py-4 text-center border border-dashed border-white/10 rounded-lg">
                       No metrics added yet. Add metrics or leave empty for auto-inference.
@@ -1578,7 +1571,7 @@ const AppContent: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Fork from template option */}
                 {!createTemplateForm.forkFromId && (
                   <div>
@@ -1602,7 +1595,7 @@ const AppContent: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               {/* Modal Footer */}
               <div className="p-6 border-t border-white/[0.06] flex items-center justify-end gap-3">
                 <button
@@ -1654,7 +1647,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex h-screen w-full bg-[#030a06] p-3 gap-3 overflow-hidden text-slate-200 font-['Epilogue'] font-light selection:bg-emerald-500/20 text-[12px]">
-      
+
       {/* Chat Panel */}
       {view === 'template' && activeTemplate && (
         <div className={`fixed right-3 top-3 bottom-3 z-40 transition-all duration-300 ${isChatOpen ? 'w-72' : 'w-0'}`}>
@@ -1674,7 +1667,7 @@ const AppContent: React.FC = () => {
           />
         </div>
       )}
-      
+
       {/* Sidebar - hidden when PDF viewer is open */}
       <div className={`flex flex-col gap-2 shrink-0 transition-all duration-300 ${previewDoc ? 'w-0 opacity-0 overflow-hidden' : isSidebarExpanded ? 'w-56' : 'w-12'}`}>
         {isSidebarExpanded ? (
@@ -1690,7 +1683,7 @@ const AppContent: React.FC = () => {
                 <p className="text-[9px] text-emerald-400 uppercase tracking-wider font-semibold truncate">{activeTemplate?.name || 'Loading...'}</p>
               </div>
             </div>
-            
+
             {/* Reservoir Panel */}
             <div className="flex-1 min-h-0">
               <input type="file" ref={fileInputRef} className="hidden" multiple onChange={handleFileUpload} />
@@ -1721,8 +1714,8 @@ const AppContent: React.FC = () => {
                 </button>
               ))}
               <input type="file" ref={fileInputRef} className="hidden" multiple onChange={handleFileUpload} />
-              <button 
-                onClick={() => fileInputRef.current?.click()} 
+              <button
+                onClick={() => fileInputRef.current?.click()}
                 className="w-full p-2 border border-dashed border-white/10 rounded-md text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all flex items-center justify-center"
                 title="Ingest Data"
               >
@@ -1731,13 +1724,12 @@ const AppContent: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         {/* Collapse/Expand Toggle */}
-        <button 
+        <button
           onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-          className={`absolute top-20 z-10 w-5 h-5 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 transition-all shadow-md ${
-            isSidebarExpanded ? 'left-[220px]' : 'left-[44px]'
-          }`}
+          className={`absolute top-20 z-10 w-5 h-5 bg-slate-800 border border-white/10 rounded-full flex items-center justify-center text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 transition-all shadow-md ${isSidebarExpanded ? 'left-[220px]' : 'left-[44px]'
+            }`}
         >
           {isSidebarExpanded ? <PanelLeftClose className="w-3 h-3" /> : <PanelLeft className="w-3 h-3" />}
         </button>
@@ -1761,9 +1753,9 @@ const AppContent: React.FC = () => {
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
               {previewDoc.type === 'application/pdf' && previewDoc.blobUrl && (
-                <a 
-                  href={previewDoc.blobUrl} 
-                  target="_blank" 
+                <a
+                  href={previewDoc.blobUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-md text-[8px] hover:bg-emerald-500/20 transition-colors flex items-center gap-1 uppercase tracking-wider font-medium"
                 >
@@ -1771,7 +1763,7 @@ const AppContent: React.FC = () => {
                   Open
                 </a>
               )}
-              <button 
+              <button
                 onClick={() => setPreviewDoc(null)}
                 className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded-md transition-all"
               >
@@ -1779,7 +1771,7 @@ const AppContent: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
           {/* PDF Content - Scrollable */}
           <div className="flex-1 overflow-auto bg-slate-950/40 custom-scrollbar">
             {previewDoc.type === 'application/pdf' && previewDoc.blobUrl ? (
@@ -1805,7 +1797,7 @@ const AppContent: React.FC = () => {
                 >
                   {Array.from(new Array(pdfNumPages || 0), (_, index) => (
                     <div key={`page_${index + 1}`} className="mb-2">
-                      <Page 
+                      <Page
                         pageNumber={index + 1}
                         scale={pdfScale}
                         className="shadow-lg rounded-md overflow-hidden"
@@ -1838,8 +1830,8 @@ const AppContent: React.FC = () => {
               </div>
             ) : previewDoc.type?.startsWith('image/') && previewDoc.blobUrl ? (
               <div className="w-full h-full flex items-center justify-center p-3">
-                <img 
-                  src={previewDoc.blobUrl} 
+                <img
+                  src={previewDoc.blobUrl}
                   alt={previewDoc.name}
                   className="max-w-full max-h-full object-contain rounded-md shadow-xl"
                 />
@@ -1865,7 +1857,7 @@ const AppContent: React.FC = () => {
                 <Activity className="w-3 h-3" />
                 <span className="text-[11px] uppercase tracking-wider">{documents.length} Entities</span>
               </div>
-              
+
               {/* Analytical Questions Glyph - appears only when matrix has real data */}
               <AnalyticalQuestionsGlyph
                 isVisible={documents.length > 0 && Object.values(cells).some((c: CellData) => c.value && c.value !== '—' && c.value !== 'Fault' && !c.isLoading)}
@@ -1884,20 +1876,20 @@ const AppContent: React.FC = () => {
               />
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {/* Add Column Button */}
             <button
               onClick={() => {
                 if (!activeTemplate) return;
-                const newMetric = { 
-                  id: `metric-${Date.now()}`, 
-                  label: 'New Column', 
-                  description: '' 
+                const newMetric = {
+                  id: `metric-${Date.now()}`,
+                  label: 'New Column',
+                  description: ''
                 };
-                setActiveTemplate({ 
-                  ...activeTemplate, 
-                  metrics: [...activeTemplate.metrics, newMetric] 
+                setActiveTemplate({
+                  ...activeTemplate,
+                  metrics: [...activeTemplate.metrics, newMetric]
                 });
               }}
               disabled={!activeTemplate}
@@ -1909,19 +1901,18 @@ const AppContent: React.FC = () => {
             </button>
 
             {/* Hydrate Button */}
-            <button 
+            <button
               onClick={computeAll}
               disabled={isProcessing || documents.length === 0 || !activeTemplate || activeTemplate.metrics.length === 0}
-              className={`px-3 py-1.5 rounded-md text-[10px] uppercase tracking-[0.08em] font-bold transition-all flex items-center gap-1.5 border ${
-                isProcessing || documents.length === 0 || !activeTemplate || activeTemplate.metrics.length === 0
+              className={`px-3 py-1.5 rounded-md text-[10px] uppercase tracking-[0.08em] font-bold transition-all flex items-center gap-1.5 border ${isProcessing || documents.length === 0 || !activeTemplate || activeTemplate.metrics.length === 0
                 ? 'bg-slate-800/50 text-slate-500 border-slate-700/50 cursor-not-allowed'
                 : 'bg-emerald-500 text-black border-emerald-400 hover:bg-emerald-400 shadow-md shadow-emerald-500/20 active:scale-[0.98]'
-              }`}
+                }`}
             >
               {isProcessing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3 fill-current" />}
               Hydrate
             </button>
-            
+
             {/* User Menu */}
             <UserMenu />
           </div>
@@ -1933,120 +1924,120 @@ const AppContent: React.FC = () => {
               <thead>
                 <tr className="sticky top-0 z-20 bg-[#030a06]/95 backdrop-blur-xl">
                   <th className="px-2.5 py-2 text-left w-40 border-b border-white/[0.06] font-semibold text-slate-400 text-[11px] uppercase tracking-[0.15em] group">
-                      <div className="flex items-center justify-between">
-                        <span>Entity</span>
-                        <button 
-                          onClick={() => fileInputRef.current?.click()}
-                          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-400 transition-all"
-                          title="Add documents"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                    <div className="flex items-center justify-between">
+                      <span>Entity</span>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-emerald-500/10 text-slate-500 hover:text-emerald-400 transition-all"
+                        title="Add documents"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </th>
+                  {(activeTemplate?.metrics || []).map((metric, idx) => (
+                    <th
+                      key={metric.id}
+                      className="px-2.5 py-2 text-left min-w-[120px] max-w-[160px] border-b border-white/[0.06] border-l border-white/[0.03]"
+                    >
+                      <div className="flex flex-col gap-0">
+                        <input
+                          type="text"
+                          value={metric.label}
+                          onChange={(e) => {
+                            if (!activeTemplate) return;
+                            const newMetrics = [...activeTemplate.metrics];
+                            newMetrics[idx] = { ...newMetrics[idx], label: e.target.value };
+                            setActiveTemplate({ ...activeTemplate, metrics: newMetrics });
+                          }}
+                          className="text-slate-200 text-[13px] font-normal tracking-tight bg-transparent border-none outline-none focus:text-emerald-300 hover:text-emerald-300/80 transition-colors cursor-text w-full truncate"
+                          title="Click to edit column name"
+                        />
+                        <span className="text-[10px] text-emerald-500/60 font-mono tracking-[0.1em] uppercase">P_{metric.id.split('-').pop()}</span>
                       </div>
                     </th>
-                  {(activeTemplate?.metrics || []).map((metric, idx) => (
-                      <th 
-                        key={metric.id} 
-                      className="px-2.5 py-2 text-left min-w-[120px] max-w-[160px] border-b border-white/[0.06] border-l border-white/[0.03]"
-                      >
-                      <div className="flex flex-col gap-0">
-                            <input
-                              type="text"
-                              value={metric.label}
-                              onChange={(e) => {
-                                if (!activeTemplate) return;
-                                const newMetrics = [...activeTemplate.metrics];
-                                newMetrics[idx] = { ...newMetrics[idx], label: e.target.value };
-                                setActiveTemplate({ ...activeTemplate, metrics: newMetrics });
-                              }}
-                              className="text-slate-200 text-[13px] font-normal tracking-tight bg-transparent border-none outline-none focus:text-emerald-300 hover:text-emerald-300/80 transition-colors cursor-text w-full truncate"
-                              title="Click to edit column name"
-                            />
-                            <span className="text-[10px] text-emerald-500/60 font-mono tracking-[0.1em] uppercase">P_{metric.id.split('-').pop()}</span>
-                        </div>
-                      </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {documents.map((doc) => (
-                      <tr 
-                        key={doc.id}
-                        className="matrix-data-row group transition-all duration-200 hover:bg-white/[0.02]"
-                      >
-                        <td className="px-2.5 py-1.5 border-b border-white/[0.03]">
-                          <span className="text-slate-200 text-[13px] font-normal truncate block max-w-[140px]">{doc.name}</span>
-                          <span className="text-[10px] text-slate-500 font-mono uppercase tracking-[0.06em]">N_{doc.id}</span>
+                  <tr
+                    key={doc.id}
+                    className="matrix-data-row group transition-all duration-200 hover:bg-white/[0.02]"
+                  >
+                    <td className="px-2.5 py-1.5 border-b border-white/[0.03]">
+                      <span className="text-slate-200 text-[13px] font-normal truncate block max-w-[140px]">{doc.name}</span>
+                      <span className="text-[10px] text-slate-500 font-mono uppercase tracking-[0.06em]">N_{doc.id}</span>
                     </td>
                     {(activeTemplate?.metrics || []).map((metric, metricIdx) => {
                       const cellId = `${doc.id}-${metric.id}`;
                       const cell = cells[cellId];
-                          const isHighlighted = highlightedCell === cellId;
-                          const isAnchor = anchorCellId === cellId;
-                          
-                          const handleCellClick = (e: React.MouseEvent) => {
-                            if (cell?.value && cell.value !== 'Fault') {
-                              // Cell interactions are independent of analytical lens
-                              // The lens remains active until explicitly closed
-                              
-                              // Toggle: if same cell is clicked, close overlay; otherwise open
-                              if (anchorCellId === cellId) {
-                                setAnchorCellId(null);
-                                setAnchorCellRect(null);
-                                setReasoningExpanded(false);
-                              } else {
-                                // Get the cell element's bounding rect
-                                const cellElement = e.currentTarget as HTMLElement;
-                                const rect = cellElement.getBoundingClientRect();
-                                setAnchorCellId(cellId);
-                                setAnchorCellRect(rect);
-                                setReasoningExpanded(false);
-                              }
-                            }
-                          };
-                          
+                      const isHighlighted = highlightedCell === cellId;
+                      const isAnchor = anchorCellId === cellId;
+
+                      const handleCellClick = (e: React.MouseEvent) => {
+                        if (cell?.value && cell.value !== 'Fault') {
+                          // Cell interactions are independent of analytical lens
+                          // The lens remains active until explicitly closed
+
+                          // Toggle: if same cell is clicked, close overlay; otherwise open
+                          if (anchorCellId === cellId) {
+                            setAnchorCellId(null);
+                            setAnchorCellRect(null);
+                            setReasoningExpanded(false);
+                          } else {
+                            // Get the cell element's bounding rect
+                            const cellElement = e.currentTarget as HTMLElement;
+                            const rect = cellElement.getBoundingClientRect();
+                            setAnchorCellId(cellId);
+                            setAnchorCellRect(rect);
+                            setReasoningExpanded(false);
+                          }
+                        }
+                      };
+
                       return (
-                            <td 
-                              key={cellId} 
-                              data-cell-id={cellId}
-                              className={`px-2.5 py-1.5 border-l border-white/[0.03] border-b border-white/[0.03] relative transition-all duration-200 ${cell?.isLoading ? 'matrix-cell-loading bg-emerald-500/[0.02]' : ''} ${isHighlighted ? 'ring-1 ring-emerald-400 bg-emerald-500/15 shadow-[0_0_12px_rgba(52,211,153,0.3)] cell-highlight-pulse' : ''} ${isAnchor ? 'ring-1 ring-emerald-500/30 bg-emerald-500/[0.06]' : ''}`}
-                            >
-                              <div className="min-h-[1.25rem] flex flex-col justify-center">
+                        <td
+                          key={cellId}
+                          data-cell-id={cellId}
+                          className={`px-2.5 py-1.5 border-l border-white/[0.03] border-b border-white/[0.03] relative transition-all duration-200 ${cell?.isLoading ? 'matrix-cell-loading bg-emerald-500/[0.02]' : ''} ${isHighlighted ? 'ring-1 ring-emerald-400 bg-emerald-500/15 shadow-[0_0_12px_rgba(52,211,153,0.3)] cell-highlight-pulse' : ''} ${isAnchor ? 'ring-1 ring-emerald-500/30 bg-emerald-500/[0.06]' : ''}`}
+                        >
+                          <div className="min-h-[1.25rem] flex flex-col justify-center">
                             {cell?.isLoading ? (
-                                  <div className="signal-assembly">
-                                    <div className="signal-segment"></div>
-                                    <div className="signal-segment"></div>
-                                    <div className="signal-segment"></div>
-                                    <div className="signal-segment"></div>
+                              <div className="signal-assembly">
+                                <div className="signal-segment"></div>
+                                <div className="signal-segment"></div>
+                                <div className="signal-segment"></div>
+                                <div className="signal-segment"></div>
                               </div>
                             ) : cell?.value ? (
-                                  <div className="animate-float-up flex flex-col gap-1 relative group/cell">
+                              <div className="animate-float-up flex flex-col gap-1 relative group/cell">
                                 {cell.value === 'Fault' ? (
-                                      <div className="flex flex-col gap-0.5">
-                                        <span className="text-rose-400 text-[13px] font-mono">Error</span>
-                                        <span className="text-[10px] text-rose-500/50 uppercase tracking-wider">Failed</span>
+                                  <div className="flex flex-col gap-0.5">
+                                    <span className="text-rose-400 text-[13px] font-mono">Error</span>
+                                    <span className="text-[10px] text-rose-500/50 uppercase tracking-wider">Failed</span>
                                   </div>
                                 ) : (
                                   <>
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex items-center gap-1.5 opacity-50">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${cell.confidence === 'High' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
-                                            <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">{cell.confidence}</span>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-1.5 opacity-50">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${cell.confidence === 'High' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                                        <span className="text-[10px] font-semibold uppercase tracking-[0.08em]">{cell.confidence}</span>
+                                      </div>
                                     </div>
-                                        </div>
-                                        <button 
-                                          onClick={handleCellClick}
-                                          className="text-left w-full"
-                                        >
-                                          <span className={`text-[13px] font-mono leading-snug selection:bg-emerald-500/30 line-clamp-2 transition-colors ${isAnchor ? 'text-emerald-300' : 'text-slate-100 hover:text-emerald-300'}`}>
-                                            {cell.value}
-                                          </span>
-                                        </button>
+                                    <button
+                                      onClick={handleCellClick}
+                                      className="text-left w-full"
+                                    >
+                                      <span className={`text-[13px] font-mono leading-snug selection:bg-emerald-500/30 line-clamp-2 transition-colors ${isAnchor ? 'text-emerald-300' : 'text-slate-100 hover:text-emerald-300'}`}>
+                                        {cell.value}
+                                      </span>
+                                    </button>
                                   </>
                                 )}
                               </div>
                             ) : (
-                                  <button onClick={() => computeCell(doc.id, metric)} className="w-full opacity-0 group-hover:opacity-100 transition-all text-[11px] text-slate-600 hover:text-emerald-400 font-mono tracking-[0.1em] font-semibold">[ EXTRACT ]</button>
+                              <button onClick={() => computeCell(doc.id, metric)} className="w-full opacity-0 group-hover:opacity-100 transition-all text-[11px] text-slate-600 hover:text-emerald-400 font-mono tracking-[0.1em] font-semibold">[ EXTRACT ]</button>
                             )}
                           </div>
                         </td>
@@ -2073,7 +2064,7 @@ const AppContent: React.FC = () => {
                   <span className="text-[7px] text-slate-500 font-mono uppercase tracking-wider">Telemetry</span>
                 </div>
               </div>
-              <button 
+              <button
                 onClick={() => setIsToastExpanded(!isToastExpanded)}
                 className="ml-1.5 p-1 text-slate-500 hover:text-emerald-400 transition-colors"
               >
@@ -2119,7 +2110,7 @@ const AppContent: React.FC = () => {
               metric={data.metric}
               document={data.doc}
               anchorRect={anchorCellRect}
-          onClose={() => {
+              onClose={() => {
                 setAnchorCellId(null);
                 setAnchorCellRect(null);
                 setReasoningExpanded(false);

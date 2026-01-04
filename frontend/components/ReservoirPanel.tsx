@@ -26,27 +26,27 @@ interface ReservoirPanelProps {
  * 
  * Used in both Atlas (graph) and Prism (matrix) views for consistency.
  */
-const ReservoirPanel: React.FC<ReservoirPanelProps> = ({ 
-  documents, 
-  onUpload, 
+const ReservoirPanel: React.FC<ReservoirPanelProps> = ({
+  documents,
+  onUpload,
   isUploading,
   onPreview,
   onDelete,
   className = ''
 }) => {
   return (
-    <aside className={`w-full glass-surface rounded-xl flex flex-col z-40 border border-emerald-500/10 overflow-hidden h-full ${className}`}>
+    <aside className={`w-full glass-surface rounded-none flex flex-col z-40 border border-emerald-500/10 overflow-hidden h-full ${className}`}>
       {/* Header - Reservoir Branding */}
       <div className="p-4 border-b border-white/[0.06]">
         <div className="flex items-center gap-2 mb-4">
           <Database className="w-3.5 h-3.5 text-emerald-500/70" />
           <h2 className="text-[9px] font-bold text-emerald-500/70 uppercase tracking-[0.2em]">Reservoir</h2>
         </div>
-        
+
         {/* Ingest Area - Drag & Drop Zone */}
         <label className={`
           flex flex-col items-center justify-center w-full h-24 
-          border-2 border-dashed border-white/10 rounded-xl 
+          border-2 border-dashed border-white/10 rounded-none 
           cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-500/[0.02]
           transition-all group relative overflow-hidden
           ${isUploading ? 'opacity-50 pointer-events-none' : ''}
@@ -65,12 +65,12 @@ const ReservoirPanel: React.FC<ReservoirPanelProps> = ({
               <span className="text-[8px] text-slate-600 mt-0.5">.txt, .md, .pdf</span>
             </>
           )}
-          <input 
-            type="file" 
-            multiple 
-            className="hidden" 
-            onChange={onUpload} 
-            accept=".txt,.md,.pdf,application/pdf,text/plain,text/markdown" 
+          <input
+            type="file"
+            multiple
+            className="hidden"
+            onChange={onUpload}
+            accept=".txt,.md,.pdf,application/pdf,text/plain,text/markdown"
           />
         </label>
       </div>
@@ -82,7 +82,7 @@ const ReservoirPanel: React.FC<ReservoirPanelProps> = ({
             Documents ({documents.length})
           </span>
         </div>
-        
+
         {documents.length === 0 ? (
           <div className="px-2 py-6 text-center">
             <p className="text-[10px] text-slate-600 italic leading-relaxed">
@@ -94,11 +94,11 @@ const ReservoirPanel: React.FC<ReservoirPanelProps> = ({
           </div>
         ) : (
           documents.map((doc) => (
-            <div 
+            <div
               key={doc.id}
-              className="flex items-center gap-2.5 p-2.5 rounded-lg hover:bg-white/[0.03] border border-transparent hover:border-white/[0.04] transition-all cursor-default group"
+              className="flex items-center gap-2.5 p-2.5 rounded-none hover:bg-white/[0.03] border border-transparent hover:border-white/[0.04] transition-all cursor-default group"
             >
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500/60 shrink-0">
+              <div className="w-7 h-7 rounded-none bg-emerald-500/10 flex items-center justify-center text-emerald-500/60 shrink-0">
                 <FileText className="w-3.5 h-3.5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -110,18 +110,18 @@ const ReservoirPanel: React.FC<ReservoirPanelProps> = ({
               {/* Actions - visible on hover */}
               <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all shrink-0">
                 {onPreview && (
-                  <button 
-                    onClick={() => onPreview(doc)} 
-                    className="p-1 hover:text-emerald-400 text-slate-500 transition-all rounded" 
+                  <button
+                    onClick={() => onPreview(doc)}
+                    className="p-1 hover:text-emerald-400 text-slate-500 transition-all rounded-none"
                     title="Preview"
                   >
                     <Eye className="w-3 h-3" />
                   </button>
                 )}
                 {onDelete && (
-                  <button 
-                    onClick={() => onDelete(doc.id)} 
-                    className="p-1 hover:text-rose-400 text-slate-500 transition-all rounded" 
+                  <button
+                    onClick={() => onDelete(doc.id)}
+                    className="p-1 hover:text-rose-400 text-slate-500 transition-all rounded-none"
                     title="Remove"
                   >
                     <Trash2 className="w-3 h-3" />
@@ -136,7 +136,7 @@ const ReservoirPanel: React.FC<ReservoirPanelProps> = ({
       {/* Status Footer */}
       <div className="p-3 border-t border-white/[0.06]">
         <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+          <div className="w-1.5 h-1.5 rounded-none bg-emerald-500 animate-pulse"></div>
           <Cpu className="w-3 h-3 text-emerald-500/60" />
           AI Engine Ready
         </div>
@@ -146,4 +146,3 @@ const ReservoirPanel: React.FC<ReservoirPanelProps> = ({
 };
 
 export default ReservoirPanel;
-

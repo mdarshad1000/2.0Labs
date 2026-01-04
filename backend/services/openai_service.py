@@ -247,7 +247,7 @@ MANDATORY: Return ONLY a valid JSON object with these fields:
 """
         
         response = await self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o-mini-mini",
             messages=[
                 {"role": "system", "content": "You are an expert data extraction engine. Always return valid JSON."},
                 {"role": "user", "content": prompt}
@@ -301,7 +301,7 @@ CRITERIA:
         
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o-mini-mini",
                 messages=[
                     {"role": "system", "content": "You are an expert at analyzing documents and synthesizing comparison metrics. Always return valid JSON."},
                     {"role": "user", "content": prompt}
@@ -385,7 +385,7 @@ IMPORTANT: Use the exact doc_id and metric_id values from the context above (fou
 """
         
         response = await self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o-mini-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -434,7 +434,7 @@ Respond naturally with inline citations [1], [2], etc. referencing the data abov
 
         # Stream the text response
         stream = await self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o-mini-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -470,7 +470,7 @@ Return ONLY a JSON object with a "citations" array. Each citation should have:
 Return: {{"citations": [...]}}"""
 
         citation_response = await self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o-mini-mini",
             messages=[{"role": "user", "content": citation_prompt}],
             response_format={"type": "json_object"},
             temperature=0.3
@@ -551,7 +551,7 @@ Remember:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-4o-mini-mini",
                 messages=[
                     {"role": "system", "content": CHART_ORCHESTRATOR_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt}
@@ -628,7 +628,7 @@ Your task is to create visual research nodes that answer queries based on docume
 
 Each node should:
 - Have a clear, concise title (max 8 words)
-- Contain 2-4 bullet points with key insights
+- Contain key insights (use markdown bullet points for lists)
 - Be assigned a color based on its nature:
   - 'green' for positive findings, growth, opportunities
   - 'blue' for neutral facts, data points, descriptions
@@ -650,7 +650,7 @@ Return JSON format:
   "nodes": [
     {{
       "title": "Node Title",
-      "content": ["Bullet point 1", "Bullet point 2", "Bullet point 3"],
+      "content": "Bullet point 1\nBullet point 2\nBullet point 3",
       "color": "green" | "blue" | "yellow" | "red"
     }}
   ]
@@ -658,7 +658,7 @@ Return JSON format:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -675,7 +675,7 @@ Return JSON format:
             return {
                 "nodes": [{
                     "title": "Error",
-                    "content": [f"Failed to generate nodes: {str(e)}"],
+                    "content": f"Failed to generate nodes: {str(e)}",
                     "color": "red"
                 }]
             }
@@ -683,7 +683,7 @@ Return JSON format:
     async def expand_graph_node(
         self,
         node_title: str,
-        node_content: List[str],
+        node_content: str,
         documents: List[dict],
         query: Optional[str] = None
     ) -> dict:
@@ -732,7 +732,7 @@ Return JSON format:
   "nodes": [
     {{
       "title": "Child Node Title",
-      "content": ["Detailed point 1", "Detailed point 2"],
+      "content": "Detailed point 1\nDetailed point 2",
       "color": "green" | "blue" | "yellow" | "red"
     }}
   ]
@@ -740,7 +740,7 @@ Return JSON format:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -772,7 +772,7 @@ Return JSON format:
         self._ensure_initialized()
         
         nodes_text = "\n---\n".join([
-            f"Title: {n['title']}\nContent: {', '.join(n['content'])}"
+            f"Title: {n['title']}\nContent: {n['content']}"
             for n in nodes
         ])
         
@@ -796,14 +796,14 @@ Return JSON format:
 {{
   "node": {{
     "title": "Synthesized Title",
-    "content": ["Synthesized point 1", "Synthesized point 2", "Synthesized point 3"],
+    "content": "Synthesized point 1\nSynthesized point 2\nSynthesized point 3",
     "color": "green" | "blue" | "yellow" | "red"
   }}
 }}"""
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -820,7 +820,7 @@ Return JSON format:
             return {
                 "node": {
                     "title": "Merge Failed",
-                    "content": [f"Error: {str(e)}"],
+                    "content": f"Error: {str(e)}",
                     "color": "red"
                 }
             }
@@ -854,7 +854,7 @@ Return JSON format:
             parent_context = f"""
 Parent Node Context:
 Title: {parent_node.get('title', 'N/A')}
-Content: {', '.join(parent_node.get('content', []))}
+Content: {parent_node.get('content', '')}
 
 The new node should be related to or extend from this parent."""
 
@@ -863,7 +863,7 @@ Create a focused, informative node based on the user's request.
 
 The node should:
 - Have a clear, descriptive title
-- Contain 2-4 relevant bullet points
+- Contain relevant, detailed insights (use markdown bullet points for lists)
 - Be grounded in the document context when available
 - Be assigned an appropriate color
 
@@ -881,14 +881,14 @@ Return JSON format:
 {{
   "node": {{
     "title": "Node Title",
-    "content": ["Point 1", "Point 2", "Point 3"],
+    "content": "Point 1\nPoint 2\nPoint 3",
     "color": "green" | "blue" | "yellow" | "red"
   }}
 }}"""
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -905,7 +905,7 @@ Return JSON format:
             return {
                 "node": {
                     "title": "Creation Failed",
-                    "content": [f"Error: {str(e)}"],
+                    "content": f"Error: {str(e)}",
                     "color": "red"
                 }
             }
@@ -964,7 +964,7 @@ Return JSON:
         try:
             # Get the dynamic plan first
             plan_response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are a research planner. Determine the optimal structure for knowledge nodes based on the query and documents. Be smart about how many nodes to create - not too few, not too many."},
                     {"role": "user", "content": plan_prompt}
@@ -997,20 +997,20 @@ Suggested color: {node_plan.get('color_hint', 'blue')}
 
 The node should have:
 - A clear, specific title (can refine the suggested title)
-- 2-4 bullet points with concrete insights from the documents
+- Concrete insights from the documents (optionally using markdown bullet points)
 - A color: 'green' (positive/success), 'blue' (neutral/facts), 'yellow' (important/highlights), 'red' (risks/concerns/negatives)
 
 Return JSON:
 {{
   "node": {{
     "title": "Node Title",
-    "content": ["Point 1", "Point 2", "Point 3"],
+    "content": "Point 1\nPoint 2\nPoint 3",
     "color": "green" | "blue" | "yellow" | "red"
   }}
 }}"""
 
                 node_response = await self.client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": "You are a research assistant creating a single knowledge node. Extract specific, actionable insights."},
                         {"role": "user", "content": node_prompt}
@@ -1060,11 +1060,11 @@ Each suggestion should be a clear, actionable query that would result in valuabl
 
         user_prompt = f"""Node 1:
 Title: {source_node['title']}
-Content: {', '.join(source_node['content'])}
+Content: {source_node['content']}
 
 Node 2:
 Title: {target_node['title']}
-Content: {', '.join(target_node['content'])}
+Content: {target_node['content']}
 
 Generate 3 specific suggestions for how these nodes could be connected or synthesized.
 Each suggestion should be phrased as a question or directive that would create a meaningful new node.
@@ -1080,7 +1080,7 @@ Return JSON:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -1106,7 +1106,7 @@ Return JSON:
     async def generate_expand_suggestions(
         self,
         node_title: str,
-        node_content: List[str],
+        node_content: str,
         documents: List[dict]
     ) -> dict:
         """
@@ -1152,7 +1152,7 @@ Return JSON:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
