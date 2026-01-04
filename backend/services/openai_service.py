@@ -1039,42 +1039,45 @@ Return JSON:
 
     async def generate_merge_suggestions(
         self,
-        source_node: dict,
-        target_node: dict
+        nodes: List[dict]
     ) -> dict:
         """
-        Generate AI suggestions for how to merge/connect two nodes.
+        Generate suggestions for merging multiple nodes.
         
         Args:
-            source_node: Dict with 'title' and 'content' keys
-            target_node: Dict with 'title' and 'content' keys
+            nodes: List of nodes (dicts with title, content)
             
         Returns:
-            Dict with 'suggestions' array of query strings
+            Dict with 'suggestions' list
         """
         self._ensure_initialized()
         
-        system_prompt = """You are a research assistant helping to connect knowledge nodes.
-Given two nodes, suggest 3 specific ways they could be connected or merged into a new insight.
-Each suggestion should be a clear, actionable query that would result in valuable synthesis."""
+        nodes_text = "\n---\n".join([
+            f"Title: {n['title']}\nContent: {str(n['content'])[:500]}"
+            for n in nodes
+        ])
+        
+        system_prompt = """You are a research assistant that identifies connections between multiple knowledge nodes.
+Suggest 3 distinct ways these nodes could be synthesized or merged.
 
-        user_prompt = f"""Node 1:
-Title: {source_node['title']}
-Content: {source_node['content']}
+Each suggestion should:
+- Be a concise, action-oriented phrase (max 6 words)
+- Focus on the thematic connection or relationship
+- Be phrased as a goal or question (e.g., "Compare X and Y", "Synthesize findings on Z")
 
-Node 2:
-Title: {target_node['title']}
-Content: {target_node['content']}
+Always return valid JSON."""
 
-Generate 3 specific suggestions for how these nodes could be connected or synthesized.
-Each suggestion should be phrased as a question or directive that would create a meaningful new node.
+        user_prompt = f"""Nodes to analyze:
+{nodes_text}
 
-Return JSON:
+Suggest 3 ways to synthesize these nodes into a single cohesive topic.
+
+Return JSON format:
 {{
   "suggestions": [
-    "First specific suggestion",
-    "Second specific suggestion",
-    "Third specific suggestion"
+    "Suggestion 1",
+    "Suggestion 2",
+    "Suggestion 3"
   ]
 }}"""
 
@@ -1096,9 +1099,7 @@ Return JSON:
             print(f"Merge suggestions error: {e}")
             return {
                 "suggestions": [
-                    f"How do '{source_node['title']}' and '{target_node['title']}' relate?",
-                    "Synthesize key insights from both perspectives",
-                    "What patterns emerge from comparing these insights?"
+                    "Synthesize findings from these nodes"
                 ]
             }
 

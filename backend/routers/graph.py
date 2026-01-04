@@ -189,8 +189,7 @@ async def suggest_expand(request: SuggestExpandRequest):
 
 
 class SuggestMergeRequest(BaseModel):
-    source_node: NodeInput
-    target_node: NodeInput
+    nodes: List[NodeInput]
 
 
 # Models moved to top
@@ -199,13 +198,11 @@ class SuggestMergeRequest(BaseModel):
 @router.post("/suggest-merge", response_model=SuggestMergeResponse)
 async def suggest_merge(request: SuggestMergeRequest):
     """
-    Generate AI suggestions for how to connect/merge two nodes.
+    Generate AI suggestions for how to connect/merge multiple nodes.
     """
     try:
-        result = await openai_service.generate_merge_suggestions(
-            source_node={"title": request.source_node.title, "content": request.source_node.content},
-            target_node={"title": request.target_node.title, "content": request.target_node.content}
-        )
+        nodes = [{"title": n.title, "content": n.content} for n in request.nodes]
+        result = await openai_service.generate_merge_suggestions(nodes=nodes)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

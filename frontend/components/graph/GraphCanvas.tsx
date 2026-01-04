@@ -220,6 +220,12 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
   }, [nodeBoxes]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Ignore clicks on UI elements
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('input') || target.closest('textarea')) {
+      return;
+    }
+
     if (draggedNodeId || edgeDrag) return;
 
     // Start marquee selection on blank canvas (normal click)
@@ -268,6 +274,13 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     const canvasY = (relY - offset.y) / scale;
 
     return { x: canvasX, y: canvasY };
+  };
+
+  const getNodePosition = (node: NodeType) => {
+    if (node.id === draggedNodeId && dragPosition) {
+      return dragPosition;
+    }
+    return node.position;
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -469,8 +482,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
             position: { x: mergeX, y: mergeY },
             connectedTo: [],
             pendingMerge: {
-              sourceNodeId: sourceNode.id,
-              targetNodeId: targetNode.id,
+              sourceNodeIds: [sourceNode.id, targetNode.id],
               suggestions: [],
               isLoadingSuggestions: true
             }
@@ -492,7 +504,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
           setRequestedFocusNodeId(mergeNodeId);
 
           // Generate merge suggestions asynchronously
-          generateMergeSuggestions(sourceNode, targetNode).then(suggestions => {
+          generateMergeSuggestions([sourceNode, targetNode]).then(suggestions => {
             // Update the merge node with suggestions
             const finalNodes = currentNodesRef.current.map(n =>
               n.id === mergeNodeId
@@ -732,32 +744,38 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     });
   };
 
-  const generateMergeSuggestions = async (source: NodeType, target: NodeType): Promise<string[]> => {
+  const generateMergeSuggestions = async (sources: NodeType[]): Promise<string[]> => {
     // Generate contextual suggestions based on node content
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/graph/suggest-merge`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          source_node: { title: source.title, content: Array.isArray(source.content) ? (source.content as any).join('\n') : source.content },
-          target_node: { title: target.title, content: Array.isArray(target.content) ? (target.content as any).join('\n') : target.content }
-        })
-      });
+      // If we have exactly 2 nodes, use the existing endpoint
+      if (sources.length === 2) {
+        const [source, target] = sources;
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/graph/suggest-merge`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            source_node: { title: source.title, content: Array.isArray(source.content) ? (source.content as any).join('\n') : source.content },
+            target_node: { title: target.title, content: Array.isArray(target.content) ? (target.content as any).join('\n') : target.content }
+          })
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        return data.suggestions || [];
+        if (response.ok) {
+          const data = await response.json();
+          return data.suggestions || [];
+        }
       }
     } catch (err) {
       console.error('Error fetching suggestions:', err);
     }
 
-    // Fallback suggestions
+    // Fallback/Generic suggestions
     return [
-      `How do "${source.title}" and "${target.title}" relate?`,
-      'Synthesize key insights from both',
-      'Compare and contrast these perspectives'
+      `Synthesize insights from ${sources.length} nodes`,
+      'Identify common themes and contradictions',
+      'Create a comprehensive summary'
     ];
+
+
   };
 
   // Handle merge selection from the pending merge node
@@ -765,14 +783,13 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     const mergeNode = project.nodes.find(n => n.id === nodeId);
     if (!mergeNode?.pendingMerge) return;
 
-    const sourceNode = project.nodes.find(n => n.id === mergeNode.pendingMerge!.sourceNodeId);
-    const targetNode = project.nodes.find(n => n.id === mergeNode.pendingMerge!.targetNodeId);
+    const sourceNodes = project.nodes.filter(n => mergeNode.pendingMerge!.sourceNodeIds.includes(n.id));
 
-    if (!sourceNode || !targetNode) return;
+    if (sourceNodes.length < 2) return;
 
     setIsLoading(true);
     try {
-      const result = await graphApi.mergeNodes([sourceNode, targetNode]);
+      const result = await graphApi.mergeNodes(sourceNodes);
 
       // Transform the merge node into a regular content node
       const updatedNodes: NodeType[] = currentNodesRef.current.map(n =>
@@ -932,7 +949,8 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       color: 'slate',
       position: { x: queryNodeX, y: queryNodeY },
       connectedTo: [],
-      isLoading: true
+      isLoading: true,
+      isQueryNode: true
     };
 
     // Capture search bar position for animation
@@ -1105,67 +1123,100 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
 
   const onMergeNodes = async () => {
     if (selectedNodes.length < 2) return;
-    setIsLoading(true);
-    try {
-      const nodesToMerge = project.nodes.filter(n => selectedNodes.includes(n.id));
-      const result = await graphApi.mergeNodes(nodesToMerge);
 
-      // Helper to get node dimensions for placement
-      const getDims = (node: NodeType) => {
-        const box = nodeBoxes[node.id];
-        if (box) return { w: box.width, h: box.height };
-        const nodeEl = nodeRefs.current[node.id];
-        return {
-          w: node.width || (nodeEl?.offsetWidth || 300),
-          h: node.height || (nodeEl?.offsetHeight || 200)
-        };
-      };
+    // Instead of immediately merging, create a PENDING merge node (like manual drag-drop)
+    const nodesToMerge = project.nodes.filter(n => selectedNodes.includes(n.id));
 
-      const avgX = nodesToMerge.reduce((acc, n) => acc + n.position.x, 0) / nodesToMerge.length;
+    // Calculate bounding box of all selected nodes
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    nodesToMerge.forEach(n => {
+      // Use nodeBoxes if available for more accuracy, otherwise use position
+      const box = nodeBoxes[n.id];
+      const x = n.position.x;
+      const y = n.position.y;
+      const w = n.width || (box?.width || 300);
+      const h = n.height || (box?.height || 200);
 
-      // Find the lowest point of all merged nodes to place below them
-      const lowestY = Math.max(...nodesToMerge.map(n => {
-        const dims = getDims(n);
-        return n.position.y + dims.h;
-      }));
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x + w);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y + h);
+    });
 
-      const newNodeY = lowestY + 400; // 400px margin
+    const mergeWidth = 300;
+    const mergeHeight = 200;
+    const gap = 150;
+    const centerY = minY + (maxY - minY) / 2;
+    const centerX = minX + (maxX - minX) / 2;
 
-      const newNodeId = Math.random().toString(36).substr(2, 9);
-      const newNode: NodeType = {
-        id: newNodeId,
-        title: result.node.title,
-        content: result.node.content,
-        color: 'orange',
-        position: { x: avgX, y: newNodeY },
-        connectedTo: [],
-      };
+    // Define candidate positions in order of preference
+    // 1. Right (Standard expansion)
+    // 2. Left (Cluster/Back-fill - simplified visual flow)
+    // 3. Bottom (Standard list flow)
+    // 4. Top
+    const candidates = [
+      { x: maxX + gap, y: centerY - mergeHeight / 2 },
+      { x: minX - mergeWidth - gap, y: centerY - mergeHeight / 2 },
+      { x: centerX - mergeWidth / 2, y: maxY + gap },
+      { x: centerX - mergeWidth / 2, y: minY - mergeHeight - gap }
+    ];
 
-      const updatedNodes = project.nodes.map(n =>
-        selectedNodes.includes(n.id)
-          ? { ...n, connectedTo: [...n.connectedTo, newNodeId] }
-          : n
-      );
-      const allNodes: NodeType[] = [...updatedNodes, newNode];
-      onUpdateProject({ nodes: allNodes });
-      currentNodesRef.current = allNodes;
-      setSelectedNodes([]);
+    let mergeX = candidates[0].x;
+    let mergeY = candidates[0].y;
 
-      // Focus on the new batch merge node
-      setRequestedFocusNodeId(newNodeId);
-    } catch (err) {
-      console.error('Error merging nodes:', err);
-    } finally {
-      setIsLoading(false);
+    // Find first non-colliding position
+    for (const pos of candidates) {
+      if (!checkCollisions(pos.x, pos.y, mergeWidth, mergeHeight)) {
+        mergeX = pos.x;
+        mergeY = pos.y;
+        break;
+      }
     }
+
+    const mergeNodeId = Math.random().toString(36).substr(2, 9);
+
+    const mergeNode: NodeType = {
+      id: mergeNodeId,
+      title: 'Pending Synthesis',
+      content: '',
+      color: 'orange',
+      position: { x: mergeX, y: mergeY },
+      connectedTo: [],
+      pendingMerge: {
+        sourceNodeIds: nodesToMerge.map(n => n.id),
+        suggestions: [],
+        isLoadingSuggestions: true
+      }
+    };
+
+    // Connect sources to this new pending node
+    const updatedNodes = project.nodes.map(n =>
+      selectedNodes.includes(n.id)
+        ? { ...n, connectedTo: [...n.connectedTo, mergeNodeId] }
+        : n
+    );
+
+    const newNodes = [...updatedNodes, mergeNode];
+    currentNodesRef.current = newNodes;
+    onUpdateProject({ nodes: newNodes });
+    setSelectedNodes([]); // Clear selection
+    setRequestedFocusNodeId(mergeNodeId);
+
+    // Generate suggestions
+    generateMergeSuggestions(nodesToMerge).then(suggestions => {
+      onUpdateProject({
+        nodes: currentNodesRef.current.map(n =>
+          n.id === mergeNodeId
+            ? { ...n, pendingMerge: { ...n.pendingMerge!, suggestions, isLoadingSuggestions: false } }
+            : n
+        )
+      });
+    });
   };
 
-  const getNodePosition = (node: NodeType) => {
-    if (node.id === draggedNodeId && dragPosition) {
-      return dragPosition;
-    }
-    return node.position;
-  };
+
+
+
 
   // Delete a specific node and remove all connections to/from it
   const deleteNode = useCallback((nodeId: string) => {
@@ -1556,10 +1607,10 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
         <div className="absolute top-0 left-0 pointer-events-auto z-10">
           {project.nodes.map(node => {
             // Get parent node names for merge nodes
-            const parentNodeNames = node.pendingMerge ? {
-              source: project.nodes.find(n => n.id === node.pendingMerge!.sourceNodeId)?.title || 'Node',
-              target: project.nodes.find(n => n.id === node.pendingMerge!.targetNodeId)?.title || 'Node'
-            } : undefined;
+            const parentNodeNames = node.pendingMerge ?
+              node.pendingMerge.sourceNodeIds.map(id =>
+                project.nodes.find(n => n.id === id)?.title || 'Node'
+              ) : undefined;
 
             return (
               <GraphNode
@@ -1665,7 +1716,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
 
       {/* Search Bar */}
       {!hasGeneratedNodes && !animatingQuery && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 pointer-events-auto z-50">
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl px-6 pointer-events-auto z-50">
           <GraphSearchBar
             ref={searchBarRef}
             documents={project.documents}
@@ -1808,6 +1859,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
             {selectedNodes.length} Selected
           </span>
           <button
+            type="button"
             onClick={onMergeNodes}
             disabled={isLoading || isStreaming}
             className="bg-orange-500 text-black px-4 py-2 rounded-none text-[10px] font-bold uppercase tracking-wider hover:bg-orange-400 transition-colors flex items-center gap-2 disabled:opacity-50"

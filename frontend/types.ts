@@ -59,8 +59,7 @@ export interface GraphNode {
   isLoading?: boolean;
   isQueryNode?: boolean;
   pendingMerge?: {
-    sourceNodeId: string;
-    targetNodeId: string;
+    sourceNodeIds: string[];
     suggestions: string[];
     isLoadingSuggestions: boolean;
   };

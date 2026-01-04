@@ -629,7 +629,7 @@ const AppContent: React.FC = () => {
     nodes: []
   });
   const [isGraphUploading, setIsGraphUploading] = useState(false);
-  const [isGraphSidebarExpanded, setIsGraphSidebarExpanded] = useState(true);
+  const [isGraphSidebarExpanded, setIsGraphSidebarExpanded] = useState(false);
 
   // Cell overlay state
   const [anchorCellId, setAnchorCellId] = useState<string | null>(null);

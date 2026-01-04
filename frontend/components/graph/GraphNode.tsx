@@ -21,7 +21,7 @@ interface GraphNodeProps {
   onDelete?: () => void;
   onMergeSelect?: (query: string) => void;
   onGetExpandSuggestions?: () => Promise<{ suggestions: string[] }>;
-  parentNodeNames?: { source: string; target: string };
+  parentNodeNames?: string[];
   isEdgeTarget?: boolean;
   innerRef?: (el: HTMLDivElement | null) => void;
   onUpdate?: (content: string) => void;
@@ -391,15 +391,24 @@ const GraphNode: React.FC<GraphNodeProps> = ({
             </div>
 
             {/* Parent node names */}
-            {parentNodeNames && (
-              <div className="flex items-center gap-2 mb-4 text-[10px]">
-                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded-none truncate max-w-[100px]" style={{ color: '#b9c0cc' }} title={parentNodeNames.source}>
-                  {parentNodeNames.source}
-                </span>
-                <span className="text-slate-500">+</span>
-                <span className="px-2 py-1 bg-white/5 border border-white/10 rounded-none truncate max-w-[100px]" style={{ color: '#b9c0cc' }} title={parentNodeNames.target}>
-                  {parentNodeNames.target}
-                </span>
+            {parentNodeNames && parentNodeNames.length > 0 && (
+              <div className="flex items-center gap-2 mb-4 text-[10px] flex-wrap">
+                {parentNodeNames.length <= 2 ? (
+                  // Show all names if 2 or fewer
+                  parentNodeNames.map((name, i) => (
+                    <React.Fragment key={i}>
+                      <span className="px-2 py-1 bg-white/5 border border-white/10 rounded-none truncate max-w-[100px]" style={{ color: '#b9c0cc' }} title={name}>
+                        {name}
+                      </span>
+                      {i < parentNodeNames.length - 1 && <span className="text-slate-500">+</span>}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  // Summary view for many nodes
+                  <span className="px-2 py-1 bg-white/5 border border-white/10 rounded-none w-full text-center" style={{ color: '#b9c0cc' }}>
+                    Synthesizing {parentNodeNames.length} Nodes
+                  </span>
+                )}
               </div>
             )}
 
@@ -480,21 +489,23 @@ const GraphNode: React.FC<GraphNodeProps> = ({
                     </button>
                   )}
                   {/* Edit Button */}
-                  <button
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setIsEditing(!isEditing);
-                      if (!isEditing) onFocusRequest?.();
-                    }}
-                    className={`p-1 rounded transition-all ${isEditing
-                      ? 'opacity-100 text-orange-400 bg-orange-500/10'
-                      : 'opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white hover:bg-white/10'
-                      }`}
-                    title="Edit node"
-                  >
-                    <Pen className="w-3.5 h-3.5" />
-                  </button>
+                  {!node.isQueryNode && (
+                    <button
+                      onMouseDown={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setIsEditing(!isEditing);
+                        if (!isEditing) onFocusRequest?.();
+                      }}
+                      className={`p-1 rounded transition-all ${isEditing
+                        ? 'opacity-100 text-orange-400 bg-orange-500/10'
+                        : 'opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white hover:bg-white/10'
+                        }`}
+                      title="Edit node"
+                    >
+                      <Pen className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   {/* Select Checkbox */}
                   <button
                     onMouseDown={(e) => { e.stopPropagation(); onToggleSelect(); }}
