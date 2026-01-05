@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GraphNode as NodeType } from '../../types';
-import { Expand as ExpandIcon, Check, Plus, Trash2, Sparkles, ArrowRight, Search, MessageSquare, X, Pen } from 'lucide-react';
+import { Expand as ExpandIcon, Check, Plus, Trash2, Sparkles, ArrowRight, Search, MessageSquare, X, Pen, Paperclip } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -29,6 +29,7 @@ interface GraphNodeProps {
   onSummarizeSelection?: (text: string) => void;
   onCreateNodeFromSelection?: (selectedText: string, query: string) => void;
   onExtensionRequest?: (text: string) => void;
+  onAttach?: () => void;
   onFocusRequest?: () => void;
   scale?: number;
 }
@@ -54,6 +55,7 @@ const GraphNode: React.FC<GraphNodeProps> = ({
   onSummarizeSelection,
   onCreateNodeFromSelection,
   onExtensionRequest,
+  onAttach,
   onFocusRequest,
   scale = 1
 }) => {
@@ -83,6 +85,28 @@ const GraphNode: React.FC<GraphNodeProps> = ({
   const nodeContainerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const isSelectingRef = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // For GraphNode, we'll append the file reference to the content
+    const file = files[0];
+    const blobUrl = URL.createObjectURL(file);
+    const fileMarkdown = `\n\n[File: ${file.name}](${blobUrl})`;
+
+    const newContent = (displayText || '') + fileMarkdown;
+    setDisplayText(newContent);
+    onUpdate?.(newContent);
+
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   // Entry animation - node scales in when first rendered
   useEffect(() => {
@@ -506,6 +530,23 @@ const GraphNode: React.FC<GraphNodeProps> = ({
                       <Pen className="w-3.5 h-3.5" />
                     </button>
                   )}
+                  {/* Attachment Button */}
+                  <button
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      handleFileClick();
+                    }}
+                    className="p-1 rounded transition-all opacity-0 group-hover:opacity-100 text-slate-500 hover:text-white hover:bg-white/10"
+                    title="Attach file"
+                  >
+                    <Paperclip className="w-3.5 h-3.5" />
+                  </button>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
                   {/* Select Checkbox */}
                   <button
                     onMouseDown={(e) => { e.stopPropagation(); onToggleSelect(); }}
@@ -733,147 +774,153 @@ const GraphNode: React.FC<GraphNodeProps> = ({
       </div>
 
       {/* Connection Points on all 4 sides */}
-      {onEdgeDragStart && (
-        <>
-          <ConnectionPoint direction="top" className="-top-2.5 left-1/2 -translate-x-1/2" />
-          <ConnectionPoint direction="bottom" className="-bottom-2.5 left-1/2 -translate-x-1/2" />
-          <ConnectionPoint direction="left" className="top-1/2 -left-2.5 -translate-y-1/2" />
-          <ConnectionPoint direction="right" className="top-1/2 -right-2.5 -translate-y-1/2" />
-        </>
-      )}
+      {
+        onEdgeDragStart && (
+          <>
+            <ConnectionPoint direction="top" className="-top-2.5 left-1/2 -translate-x-1/2" />
+            <ConnectionPoint direction="bottom" className="-bottom-2.5 left-1/2 -translate-x-1/2" />
+            <ConnectionPoint direction="left" className="top-1/2 -left-2.5 -translate-y-1/2" />
+            <ConnectionPoint direction="right" className="top-1/2 -right-2.5 -translate-y-1/2" />
+          </>
+        )
+      }
 
       {/* Invisible resize zones around the perimeter - cursor changes on hover */}
-      {onResizeStart && (
-        <>
-          {/* Corner zones - small squares at each corner for diagonal resize */}
-          <div
-            className="absolute -top-1 -left-1 w-4 h-4 cursor-nw-resize z-40"
-            onMouseDown={(e) => handleResizeMouseDown('nw', e)}
-          />
-          <div
-            className="absolute -top-1 -right-1 w-4 h-4 cursor-ne-resize z-40"
-            onMouseDown={(e) => handleResizeMouseDown('ne', e)}
-          />
-          <div
-            className="absolute -bottom-1 -right-1 w-4 h-4 cursor-se-resize z-40"
-            onMouseDown={(e) => handleResizeMouseDown('se', e)}
-          />
-          <div
-            className="absolute -bottom-1 -left-1 w-4 h-4 cursor-sw-resize z-40"
-            onMouseDown={(e) => handleResizeMouseDown('sw', e)}
-          />
-
-          {/* Edge zones - thin strips along each edge, split to avoid center (+) icons */}
-          {/* Top edge: left and right portions, gap in middle for connection point */}
-          <div
-            className="absolute -top-1 left-4 h-2 cursor-n-resize z-30"
-            style={{ width: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('n', e)}
-          />
-          <div
-            className="absolute -top-1 right-4 h-2 cursor-n-resize z-30"
-            style={{ width: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('n', e)}
-          />
-
-          {/* Bottom edge: left and right portions */}
-          <div
-            className="absolute -bottom-1 left-4 h-2 cursor-s-resize z-30"
-            style={{ width: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('s', e)}
-          />
-          <div
-            className="absolute -bottom-1 right-4 h-2 cursor-s-resize z-30"
-            style={{ width: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('s', e)}
-          />
-
-          {/* Left edge: top and bottom portions */}
-          <div
-            className="absolute -left-1 top-4 w-2 cursor-w-resize z-30"
-            style={{ height: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('w', e)}
-          />
-          <div
-            className="absolute -left-1 bottom-4 w-2 cursor-w-resize z-30"
-            style={{ height: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('w', e)}
-          />
-
-          {/* Right edge: top and bottom portions */}
-          <div
-            className="absolute -right-1 top-4 w-2 cursor-e-resize z-30"
-            style={{ height: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('e', e)}
-          />
-          <div
-            className="absolute -right-1 bottom-4 w-2 cursor-e-resize z-30"
-            style={{ height: 'calc(50% - 28px)' }}
-            onMouseDown={(e) => handleResizeMouseDown('e', e)}
-          />
-        </>
-      )}
-      {/* Selection Tooltip */}
-      {selectionData && (
-        <div
-          ref={tooltipRef}
-          className="selection-tooltip absolute z-[100] pointer-events-auto transition-all duration-200"
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          style={{
-            left: selectionData.x,
-            top: selectionData.y,
-            transform: selectionData.showBelow ? 'translateX(-50%)' : 'translate(-50%, -100%)'
-          }}
-        >
-          {!selectionData.isSearchExpanded ? (
-            // Initial Tooltip - Premium High-Contrast Theme
+      {
+        onResizeStart && (
+          <>
+            {/* Corner zones - small squares at each corner for diagonal resize */}
             <div
-              className="flex items-center gap-1 p-1.5 bg-[#0a0c10] border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_20px_rgba(251,146,60,0.1)] rounded-none animate-in fade-in zoom-in duration-200"
-              onMouseDown={(e) => e.preventDefault()} // CRITICAL: Prevent focus change to keep selection
-            >
-              <button
-                onClick={() => {
-                  onSummarizeSelection?.(selectionData.text);
-                  setSelectionData(null);
-                }}
-                onMouseDown={(e) => e.preventDefault()}
-                className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1.5"
+              className="absolute -top-1 -left-1 w-4 h-4 cursor-nw-resize z-40"
+              onMouseDown={(e) => handleResizeMouseDown('nw', e)}
+            />
+            <div
+              className="absolute -top-1 -right-1 w-4 h-4 cursor-ne-resize z-40"
+              onMouseDown={(e) => handleResizeMouseDown('ne', e)}
+            />
+            <div
+              className="absolute -bottom-1 -right-1 w-4 h-4 cursor-se-resize z-40"
+              onMouseDown={(e) => handleResizeMouseDown('se', e)}
+            />
+            <div
+              className="absolute -bottom-1 -left-1 w-4 h-4 cursor-sw-resize z-40"
+              onMouseDown={(e) => handleResizeMouseDown('sw', e)}
+            />
+
+            {/* Edge zones - thin strips along each edge, split to avoid center (+) icons */}
+            {/* Top edge: left and right portions, gap in middle for connection point */}
+            <div
+              className="absolute -top-1 left-4 h-2 cursor-n-resize z-30"
+              style={{ width: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('n', e)}
+            />
+            <div
+              className="absolute -top-1 right-4 h-2 cursor-n-resize z-30"
+              style={{ width: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('n', e)}
+            />
+
+            {/* Bottom edge: left and right portions */}
+            <div
+              className="absolute -bottom-1 left-4 h-2 cursor-s-resize z-30"
+              style={{ width: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('s', e)}
+            />
+            <div
+              className="absolute -bottom-1 right-4 h-2 cursor-s-resize z-30"
+              style={{ width: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('s', e)}
+            />
+
+            {/* Left edge: top and bottom portions */}
+            <div
+              className="absolute -left-1 top-4 w-2 cursor-w-resize z-30"
+              style={{ height: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('w', e)}
+            />
+            <div
+              className="absolute -left-1 bottom-4 w-2 cursor-w-resize z-30"
+              style={{ height: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('w', e)}
+            />
+
+            {/* Right edge: top and bottom portions */}
+            <div
+              className="absolute -right-1 top-4 w-2 cursor-e-resize z-30"
+              style={{ height: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('e', e)}
+            />
+            <div
+              className="absolute -right-1 bottom-4 w-2 cursor-e-resize z-30"
+              style={{ height: 'calc(50% - 28px)' }}
+              onMouseDown={(e) => handleResizeMouseDown('e', e)}
+            />
+          </>
+        )
+      }
+      {/* Selection Tooltip */}
+      {
+        selectionData && (
+          <div
+            ref={tooltipRef}
+            className="selection-tooltip absolute z-[100] pointer-events-auto transition-all duration-200"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            style={{
+              left: selectionData.x,
+              top: selectionData.y,
+              transform: selectionData.showBelow ? 'translateX(-50%)' : 'translate(-50%, -100%)'
+            }}
+          >
+            {!selectionData.isSearchExpanded ? (
+              // Initial Tooltip - Premium High-Contrast Theme
+              <div
+                className="flex items-center gap-1 p-1.5 bg-[#0a0c10] border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8),0_0_20px_rgba(251,146,60,0.1)] rounded-none animate-in fade-in zoom-in duration-200"
+                onMouseDown={(e) => e.preventDefault()} // CRITICAL: Prevent focus change to keep selection
               >
-                <MessageSquare className="w-3.5 h-3.5 text-orange-400/80" />
-                Summarize
-              </button>
-              <div className="w-px h-5 bg-white/10" />
-              <button
-                onClick={() => {
-                  onExpandSelection?.(selectionData.text);
-                  setSelectionData(null);
-                }}
-                onMouseDown={(e) => e.preventDefault()}
-                className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1.5"
-              >
-                <Plus className="w-3.5 h-3.5 text-orange-400/80" />
-                Expand
-              </button>
-              <div className="w-px h-5 bg-white/10" />
-              <button
-                onClick={() => {
-                  onExtensionRequest?.(selectionData.text);
-                  setSelectionData(null);
-                }}
-                onMouseDown={(e) => e.preventDefault()}
-                className="px-2 py-1.5 text-slate-400 hover:text-orange-400 transition-colors"
-                title="Further search"
-              >
-                <Search className="w-4 h-4" />
-              </button>
-            </div>
-          ) : null}
-        </div>
-      )}
-    </div>
+                <button
+                  onClick={() => {
+                    onSummarizeSelection?.(selectionData.text);
+                    setSelectionData(null);
+                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1.5"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-orange-400/80" />
+                  Summarize
+                </button>
+                <div className="w-px h-5 bg-white/10" />
+                <button
+                  onClick={() => {
+                    onExpandSelection?.(selectionData.text);
+                    setSelectionData(null);
+                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="px-3 py-1.5 text-[10px] uppercase tracking-wider font-bold text-slate-300 hover:text-white hover:bg-white/5 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5 text-orange-400/80" />
+                  Expand
+                </button>
+                <div className="w-px h-5 bg-white/10" />
+                <button
+                  onClick={() => {
+                    onExtensionRequest?.(selectionData.text);
+                    setSelectionData(null);
+                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="px-2 py-1.5 text-slate-400 hover:text-orange-400 transition-colors"
+                  title="Further search"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )
+      }
+    </div >
   );
 };
 

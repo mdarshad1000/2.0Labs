@@ -247,7 +247,7 @@ MANDATORY: Return ONLY a valid JSON object with these fields:
 """
         
         response = await self.client.chat.completions.create(
-            model="gpt-4o-mini-mini",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are an expert data extraction engine. Always return valid JSON."},
                 {"role": "user", "content": prompt}
@@ -301,7 +301,7 @@ CRITERIA:
         
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o-mini-mini",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": "You are an expert at analyzing documents and synthesizing comparison metrics. Always return valid JSON."},
                     {"role": "user", "content": prompt}
@@ -385,7 +385,7 @@ IMPORTANT: Use the exact doc_id and metric_id values from the context above (fou
 """
         
         response = await self.client.chat.completions.create(
-            model="gpt-4o-mini-mini",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -434,7 +434,7 @@ Respond naturally with inline citations [1], [2], etc. referencing the data abov
 
         # Stream the text response
         stream = await self.client.chat.completions.create(
-            model="gpt-4o-mini-mini",
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -470,7 +470,7 @@ Return ONLY a JSON object with a "citations" array. Each citation should have:
 Return: {{"citations": [...]}}"""
 
         citation_response = await self.client.chat.completions.create(
-            model="gpt-4o-mini-mini",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": citation_prompt}],
             response_format={"type": "json_object"},
             temperature=0.3
@@ -551,7 +551,7 @@ Remember:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o-mini-mini",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": CHART_ORCHESTRATOR_SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt}

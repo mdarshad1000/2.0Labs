@@ -55,6 +55,9 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
   const [isNewNodeDragging, setIsNewNodeDragging] = useState(false);
   const [newNodeDragOffset, setNewNodeDragOffset] = useState({ x: 0, y: 0 });
 
+  // Custom node mode state
+  const [isCustomNewNode, setIsCustomNewNode] = useState(false);
+
   // Edge dragging state
   const [edgeDrag, setEdgeDrag] = useState<EdgeDragState | null>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
@@ -748,14 +751,15 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
     // Generate contextual suggestions based on node content
     try {
       // If we have exactly 2 nodes, use the existing endpoint
-      if (sources.length === 2) {
-        const [source, target] = sources;
+      if (sources.length >= 2) {
         const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/graph/suggest-merge`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            source_node: { title: source.title, content: Array.isArray(source.content) ? (source.content as any).join('\n') : source.content },
-            target_node: { title: target.title, content: Array.isArray(target.content) ? (target.content as any).join('\n') : target.content }
+            nodes: sources.map(s => ({
+              title: s.title,
+              content: Array.isArray(s.content) ? (s.content as any).join('\n') : s.content
+            }))
           })
         });
 
@@ -824,18 +828,35 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       const sourceNode = project.nodes.find(n => n.id === newNodeState.sourceNodeId);
       if (!sourceNode) return;
 
-      const fullQuery = newNodeState.context
-        ? `Context from current node: "${newNodeState.context}"\n\nUser Query: ${newNodeQuery}`
-        : newNodeQuery;
+      let newNodeData: { title: string, content: string, color: NodeType['color'] };
 
-      const result = await graphApi.createNode(fullQuery, sourceNode, project.documents);
+      if (isCustomNewNode) {
+        // Direct text node creation
+        newNodeData = {
+          title: 'Note',
+          content: newNodeQuery,
+          color: 'orange'
+        };
+      } else {
+        // AI-generated node
+        const fullQuery = newNodeState.context
+          ? `Context from current node: "${newNodeState.context}"\n\nUser Query: ${newNodeQuery}`
+          : newNodeQuery;
+
+        const result = await graphApi.createNode(fullQuery, sourceNode, project.documents);
+        newNodeData = {
+          title: result.node.title,
+          content: result.node.content,
+          color: result.node.color
+        };
+      }
 
       const newNodeId = Math.random().toString(36).substr(2, 9);
       const newNode: NodeType = {
         id: newNodeId,
-        title: result.node.title,
-        content: result.node.content,
-        color: result.node.color,
+        title: newNodeData.title,
+        content: newNodeData.content,
+        color: newNodeData.color,
         position: newNodeState.position,
         connectedTo: [],
         parentId: newNodeState.sourceNodeId
@@ -860,6 +881,7 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
       setIsLoading(false);
       setNewNodeState(null);
       setNewNodeQuery('');
+      setIsCustomNewNode(false);
     }
   };
 
@@ -1673,9 +1695,29 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
           >
             <div className="w-[300px] bg-[#14181d] border border-[#252a31] rounded-none p-4 shadow-2xl">
               <div className="flex items-center justify-between mb-3">
-                <div className="text-[10px] uppercase tracking-wider font-bold select-none" style={{ color: '#e6eaf0' }}>New Connected Node</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-[10px] uppercase tracking-wider font-bold select-none" style={{ color: '#e6eaf0' }}>
+                    {isCustomNewNode ? 'New Custom Note' : 'New Connected Node'}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsCustomNewNode(!isCustomNewNode);
+                      if (!isCustomNewNode) {
+                        // Switching to custom mode
+                        setTimeout(() => newNodeInputRef.current?.focus(), 50);
+                      }
+                    }}
+                    className={`px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border transition-colors ${isCustomNewNode
+                      ? 'bg-orange-500 text-black border-orange-500'
+                      : 'bg-transparent text-slate-500 border-slate-700 hover:border-slate-500 hover:text-slate-400'
+                      }`}
+                  >
+                    Custom
+                  </button>
+                </div>
                 <button
-                  onClick={() => { setNewNodeState(null); setNewNodeQuery(''); }}
+                  onClick={() => { setNewNodeState(null); setNewNodeQuery(''); setIsCustomNewNode(false); }}
                   className="p-1 rounded-none hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-all"
                   title="Cancel"
                 >
@@ -1683,23 +1725,44 @@ const GraphCanvas: React.FC<GraphCanvasProps> = ({ project, onUpdateProject }) =
                 </button>
               </div>
               <div className="flex gap-2">
-                <input
-                  ref={newNodeInputRef}
-                  type="text"
-                  value={newNodeQuery}
-                  onChange={(e) => setNewNodeQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreateNewNode();
-                    if (e.key === 'Escape') {
-                      setNewNodeState(null);
-                      setNewNodeQuery('');
-                    }
-                  }}
-                  placeholder="What should this node contain?"
-                  className="flex-1 px-3 py-2 bg-black/40 border border-white/10 rounded-none text-[12px] placeholder-slate-500 outline-none focus:border-orange-500/40 select-text"
-                  style={{ color: '#b9c0cc' }}
-                  autoFocus
-                />
+                {isCustomNewNode ? (
+                  <textarea
+                    ref={newNodeInputRef as any}
+                    value={newNodeQuery}
+                    onChange={(e) => setNewNodeQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.metaKey) handleCreateNewNode();
+                      if (e.key === 'Escape') {
+                        setNewNodeState(null);
+                        setNewNodeQuery('');
+                        setIsCustomNewNode(false);
+                      }
+                    }}
+                    placeholder="Enter note content..."
+                    className="flex-1 px-3 py-2 bg-black/40 border border-white/10 rounded-none text-[12px] placeholder-slate-500 outline-none focus:border-orange-500/40 select-text min-h-[80px] resize-none"
+                    style={{ color: '#b9c0cc' }}
+                    autoFocus
+                  />
+                ) : (
+                  <input
+                    ref={newNodeInputRef}
+                    type="text"
+                    value={newNodeQuery}
+                    onChange={(e) => setNewNodeQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreateNewNode();
+                      if (e.key === 'Escape') {
+                        setNewNodeState(null);
+                        setNewNodeQuery('');
+                        setIsCustomNewNode(false);
+                      }
+                    }}
+                    placeholder="What should this node contain?"
+                    className="flex-1 px-3 py-2 bg-black/40 border border-white/10 rounded-none text-[12px] placeholder-slate-500 outline-none focus:border-orange-500/40 select-text"
+                    style={{ color: '#b9c0cc' }}
+                    autoFocus
+                  />
+                )}
                 <button
                   onClick={handleCreateNewNode}
                   disabled={!newNodeQuery.trim() || isLoading}
